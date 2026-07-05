@@ -1,0 +1,42 @@
+[project]
+name = "continuum"
+version = "0.1.0"
+description = "Reasoning-state continuity for AI — save & resume your AI thinking across sessions and providers."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Continuum" }]
+keywords = ["ai", "memory", "reasoning", "continuity", "cognee", "llm"]
+
+# Core deps are intentionally tiny so `continuum` runs with zero services
+# (local SQLite backend + heuristic extractor). Heavy pieces are optional.
+dependencies = [
+    "pydantic>=2.6",
+    "click>=8.1",
+]
+
+[project.optional-dependencies]
+# Production storage/retrieval engine.
+cognee = ["cognee>=0.1"]
+# Real LLM extraction (any OpenAI-compatible or Anthropic endpoint).
+llm = ["httpx>=0.27"]
+# HTTP API surface (browser extension / web / integrations).
+api = ["fastapi>=0.110", "uvicorn>=0.29", "httpx>=0.27"]
+# MCP server surface (Claude Code / Codex / any MCP agent).
+mcp = ["mcp>=1.0"]
+dev = ["pytest>=8.0", "ruff>=0.6", "httpx>=0.27"]
+# Everything.
+all = ["httpx>=0.27", "fastapi>=0.110", "uvicorn>=0.29", "mcp>=1.0"]
+
+[project.scripts]
+continuum = "continuum.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/continuum"]
+
+[tool.ruff]
+line-length = 100

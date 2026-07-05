@@ -1,0 +1,56 @@
+# Render Blueprint — deploy Continuum live in a few clicks.
+# In Render: New +  →  Blueprint  →  connect this repo. Render reads this file.
+# Docs: docs/DEPLOY.md
+services:
+  # 1) HTTP API — the multi-tenant backbone (per-user via the X-Continuum-User header).
+  - type: web
+    name: continuum-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter                       # starter+ required for a persistent disk
+    healthCheckPath: /health
+    dockerCommand: continuum serve --host 0.0.0.0 --port 8770
+    envVars:
+      - key: CONTINUUM_TOKEN            # bearer auth; Render generates a secret
+        generateValue: true
+      - key: CONTINUUM_BACKEND
+        value: local                   # or "cognee_cloud" (then set COGNEE_* below)
+      - key: CONTINUUM_HOME
+        value: /data
+      - key: COGNEE_API_URL            # optional — fill in Render dashboard for cognee_cloud
+        sync: false
+      - key: COGNEE_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY            # optional — clean reasoning extraction
+        sync: false
+    disk:
+      name: continuum-data
+      mountPath: /data
+      sizeGB: 1
+
+  # 2) Remote MCP server — the URL you add as a connector in Claude web / Grok / ChatGPT.
+  #    Single-tenant per process (set CONTINUUM_USER to scope). Remove this service if unneeded.
+  - type: web
+    name: continuum-mcp
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /mcp
+    dockerCommand: continuum mcp -t streamable-http --host 0.0.0.0 --port 8770
+    envVars:
+      - key: CONTINUUM_TOKEN
+        generateValue: true
+      - key: CONTINUUM_BACKEND
+        value: local
+      - key: CONTINUUM_HOME
+        value: /data
+      - key: CONTINUUM_ALLOWED_HOSTS    # your render domain(s); comma-separated
+        sync: false
+      - key: COGNEE_API_URL
+        sync: false
+      - key: COGNEE_API_KEY
+        sync: false
+    disk:
+      name: continuum-mcp-data
+      mountPath: /data
+      sizeGB: 1

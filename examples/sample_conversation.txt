@@ -1,0 +1,17 @@
+User: I'm building the auth system for our startup. Goal is a secure, low-ops login for a web app plus a mobile client. Let's design it.
+
+Assistant: Great. The big choice is session strategy. Two main options: server-side sessions (store a session id, look it up in a session store) versus stateless tokens (JWT). What matters most to you — simplicity, security, or scale?
+
+User: Low ops mostly. I don't want to run and babysit a session store.
+
+Assistant: Then let's use JWT with short-lived access tokens and refresh tokens. It's stateless, so no session store to operate. We should use PKCE for the mobile client since it's a public client and can't hold a secret safely.
+
+User: Let's not use Redis for sessions then. Actually I tried Redis on the payments service last month and the eviction policy caused a subtle race where two workers both thought they held the lock for about 50ms. We could use it here since this isn't latency-critical, but I'd rather avoid the operational surface. Let's go with JWT plus PKCE.
+
+Assistant: Agreed — JWT + PKCE, no Redis. Constraint to remember: access tokens must expire in 15 minutes or less, and refresh tokens must be revocable. One open question: how do we revoke refresh tokens without a session store? A denylist is small and could live in Postgres.
+
+User: Good. Also a constraint: we must support multi-region later, so anything we pick has to work across regions. In-process caches won't work multi-region, but for now the JWT approach is fine because verification only needs the public key.
+
+Assistant: Right. Next steps: (1) build the token-refresh endpoint, (2) add a Postgres denylist for revoked refresh tokens, (3) wire PKCE on the mobile client. The refresh endpoint is the priority. Files so far: auth/tokens.py and auth/pkce.py.
+
+User: One hypothesis I want to test: whether we even need refresh tokens, or if silent re-auth via the mobile keychain is enough. Let's leave that open for now. Let's start with the refresh endpoint next session.

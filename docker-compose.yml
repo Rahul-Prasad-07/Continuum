@@ -1,0 +1,16 @@
+services:
+  continuum:
+    build: .
+    ports:
+      - "8770:8770"
+    environment:
+      # Uncomment to enable clean LLM extraction:
+      # OPENAI_API_KEY: ${OPENAI_API_KEY}
+      CONTINUUM_BACKEND: local
+      CONTINUUM_RESUME_BUDGET: "8000"
+    volumes:
+      - continuum-data:/data
+    restart: unless-stopped
+
+volumes:
+  continuum-data:
