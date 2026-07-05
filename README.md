@@ -78,7 +78,7 @@ docker compose up                          # containerized API
 continuum mcp -t streamable-http --host 0.0.0.0 --port 8771
 ```
 
-Then add `https://your-host/mcp` as a custom connector. Full per platform instructions are in [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
+Then add your server URL as a custom connector. A live instance is already running at `https://rahultwte-continuum-mcp.hf.space/mcp`, so you can add that in Claude, Grok, or ChatGPT to try it immediately. Full per platform instructions are in [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 
 **HTTP API.** `POST /checkpoint`, `/resume`, `/ingest`, `/improve/{p}`, `/prune/{p}`, `/distill/{p}`, `/import/{p}`, `/context/{p}`. `GET /status/{p}`, `/projects`, `/lessons`, `/timeline/{p}`, `/export/{p}`, `/mode`, `/health`. `DELETE /projects/{p}`. Multi tenant through the `X-Continuum-User` header, with optional bearer auth. Interactive docs at `/docs`.
 

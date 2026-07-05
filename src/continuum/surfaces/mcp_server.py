@@ -219,14 +219,14 @@ def build_server(remote: bool = False):
 _LANDING = (
     b"<!doctype html><meta charset=utf-8><title>Continuum MCP</title>"
     b"<div style='font:16px system-ui;max-width:640px;margin:60px auto;padding:0 20px'>"
-    b"<h1>\xf0\x9f\xa7\xa0\xe2\x86\xbb Continuum MCP endpoint</h1>"
-    b"<p>This is a working <b>MCP server</b>, not a web page \xe2\x80\x94 that's why your "
+    b"<h1>Continuum MCP endpoint</h1>"
+    b"<p>This is a working <b>MCP server</b>, not a web page, which is why your "
     b"browser shows 406. Add it to your AI as a connector:</p>"
     b"<ol><li>Copy this page's URL (it ends in <code>/mcp</code>).</li>"
-    b"<li>In Claude web \xe2\x86\x92 Settings \xe2\x86\x92 Connectors \xe2\x86\x92 "
-    b"<b>Add custom connector</b> \xe2\x86\x92 paste the URL \xe2\x86\x92 Connect.</li>"
-    b"<li>Then say: <i>\xe2\x80\x9ccheckpoint this to project X with continuum\xe2\x80\x9d</i>.</li></ol>"
-    b"<p>Tools: checkpoint, resume, status, list_projects, search, forget.</p></div>"
+    b"<li>In Claude web, open Settings, then Connectors, then "
+    b"<b>Add custom connector</b>, paste the URL, and Connect.</li>"
+    b"<li>Then say: checkpoint this to project X with continuum.</li></ol>"
+    b"<p>Tools include checkpoint, resume, capture, context, export, and more.</p></div>"
 )
 
 
