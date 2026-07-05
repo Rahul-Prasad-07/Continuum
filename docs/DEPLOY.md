@@ -1,7 +1,7 @@
 # Deploy Continuum live (for any user)
 
 Continuum runs as a normal container. This guide gets it **live on the internet** so anyone can
-use it — via the HTTP API and/or as a remote MCP connector in Claude web, Grok, ChatGPT.
+use it, via the HTTP API and/or as a remote MCP connector in Claude web, Grok, ChatGPT.
 
 ## What "live for any users" needs
 1. **A host** that runs the container (Render / Fly / Railway / any VPS).
@@ -12,40 +12,40 @@ use it — via the HTTP API and/or as a remote MCP connector in Claude web, Grok
    **LLM key** for clean reasoning extraction.
 
 Two services ship in the blueprint:
-- **continuum-api** — the HTTP API. Multi-tenant: each user is isolated by the `X-Continuum-User`
+- **continuum-api**, the HTTP API. Multi-tenant: each user is isolated by the `X-Continuum-User`
   header. This is the backbone for apps and multi-user.
-- **continuum-mcp** — the remote MCP server you add as a connector in web AIs. It is **one tenant
+- **continuum-mcp**, the remote MCP server you add as a connector in web AIs. It is **one tenant
   per process** (set `CONTINUUM_USER` to scope it); for a personal connector that's fine.
 
 ---
 
-## Option A — Render (blueprint, easiest)
+## Option A, Render (blueprint, easiest)
 1. Push this repo to GitHub (Render deploys from a repo).
-2. Render → **New + → Blueprint** → pick the repo. Render reads [`render.yaml`](../render.yaml).
+2. Render -> **New + -> Blueprint** -> pick the repo. Render reads [`render.yaml`](../render.yaml).
 3. It creates **continuum-api** and **continuum-mcp**. `CONTINUUM_TOKEN` is auto-generated; fill
    optional secrets (`COGNEE_API_URL`, `COGNEE_API_KEY`, `OPENAI_API_KEY`) in the dashboard.
 4. Deploy. You get URLs like `https://continuum-api.onrender.com` and
    `https://continuum-mcp.onrender.com`.
-5. Verify: open `https://continuum-api.onrender.com/health` → `{"ok":true,...}`.
+5. Verify: open `https://continuum-api.onrender.com/health` -> `{"ok":true...}`.
 
-> Render's free tier has no persistent disk and sleeps when idle — use **Starter** (what the
+> Render's free tier has no persistent disk and sleeps when idle, use **Starter** (what the
 > blueprint sets) so `/data` persists.
 
-## Option B — Fly.io
+## Option B, Fly.io
 ```bash
 fly launch --no-deploy          # detects the Dockerfile; creates fly.toml
 fly volumes create continuum_data --size 1
-# in fly.toml: mount continuum_data → /data, set internal_port = 8770, [http_service] health check /health
+# in fly.toml: mount continuum_data -> /data, set internal_port = 8770, [http_service] health check /health
 fly secrets set CONTINUUM_TOKEN=$(openssl rand -hex 24)
 # optional: fly secrets set COGNEE_API_URL=... COGNEE_API_KEY=... OPENAI_API_KEY=...
 fly deploy
 ```
 
-## Option C — Railway / any Docker host
+## Option C, Railway / any Docker host
 Point it at the repo (Dockerfile is auto-detected), add a volume at `/data`, set
 `CONTINUUM_TOKEN`, expose port `8770`. Done.
 
-## Option D — Your own VPS (Docker Compose)
+## Option D, Your own VPS (Docker Compose)
 ```bash
 git clone <your-repo> && cd Continuum
 CONTINUUM_TOKEN=$(openssl rand -hex 24) docker compose up -d   # API on :8770
@@ -80,7 +80,7 @@ Set on the service: `CONTINUUM_BACKEND=cognee_cloud`, `COGNEE_API_URL`, `COGNEE_
 |---|---|---|
 | `CONTINUUM_TOKEN` | strongly recommended | bearer auth on API + remote MCP |
 | `CONTINUUM_HOME` | yes (set to `/data`) | where memory persists (mount a disk here) |
-| `CONTINUUM_BACKEND` | default `local` | `local` · `cognee` · `cognee_cloud` |
+| `CONTINUUM_BACKEND` | default `local` | `local`, `cognee`, `cognee_cloud` |
 | `COGNEE_API_URL` / `COGNEE_API_KEY` | for `cognee_cloud` | managed KG + embeddings + LLM |
 | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | optional | clean (non-heuristic) reasoning extraction |
 | `CONTINUUM_ALLOWED_HOSTS` | MCP behind a domain | comma-separated allowed Host headers |
@@ -114,6 +114,6 @@ one-line CLI install.
   space. For real multi-user, use the **HTTP API** (per-user header) or run one MCP instance per
   user. True multi-tenant MCP is a roadmap item.
 - **SQLite on a disk** is fine for one box / modest load; it is not built for high-concurrency
-  multi-node. For scale, move storage to `cognee_cloud` (centralized) and/or a shared DB — a
+  multi-node. For scale, move storage to `cognee_cloud` (centralized) and/or a shared DB, a
   future backend.
-- **Set the token and HTTPS.** The store holds verbatim conversation text — treat it as sensitive.
+- **Set the token and HTTPS.** The store holds verbatim conversation text, treat it as sensitive.
