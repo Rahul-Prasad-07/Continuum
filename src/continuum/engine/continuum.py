@@ -11,11 +11,12 @@ from typing import Optional
 
 from continuum._logging import get_logger
 from continuum.config import Config
-from continuum.engine.composer import compose_resume
+from continuum.engine.composer import compose_recall, compose_resume
 from continuum.engine.extractor import chunk_conversation, extract
-from continuum.engine.meter import context_report, window_for
+from continuum.engine.meter import context_report, render_gauge, window_for
 from continuum.engine.portable import (
     export_bundle,
+    export_digest,
     export_markdown,
     export_transcript,
     import_bundle,
@@ -82,6 +83,18 @@ class Continuum:
             self.backend,
             self._scope(project),
             intent,
+            budget_tokens or self.config.resume_budget_tokens,
+        )
+
+    def recall(self, project: str, subject: str, budget_tokens: Optional[int] = None) -> str:
+        """Resume by SUBJECT across the whole project history — gather every checkpoint about
+        `subject` (a topic or an intent), not just the latest. Solves "I worked on X weeks ago
+        but the latest checkpoint is about something else." Uses semantic retrieval on the Cognee
+        backends and keyword/topic matching everywhere."""
+        return compose_recall(
+            self.backend,
+            self._scope(project),
+            subject,
             budget_tokens or self.config.resume_budget_tokens,
         )
 
@@ -152,15 +165,28 @@ class Continuum:
         }
 
     # ---- portability: export / import (save & switch platforms) --------------
-    def export(self, project: str, fmt: str = "json"):
-        """Export a project. fmt='json' → lossless bundle; fmt='md' → paste-anywhere reasoning-state
-        doc; fmt='transcript' → clean full conversation (grok-style)."""
+    def export(
+        self,
+        project: str,
+        fmt: str = "json",
+        max_tokens: Optional[int] = None,
+        since: Optional[float] = None,
+    ):
+        """Export a project.
+        fmt='json'       → lossless bundle (supports `since` for an incremental delta).
+        fmt='md'         → paste-anywhere reasoning-state doc (supports `max_tokens`, `since`).
+        fmt='digest'     → hierarchical compression (recent full, older summarized) for long work.
+        fmt='transcript' → clean full conversation (grok-style).
+        """
         sp = self._scope(project)
         if fmt == "md":
-            return export_markdown(self.backend, sp, project)
+            return export_markdown(self.backend, sp, project, max_tokens=max_tokens, since=since)
+        if fmt == "digest":
+            return export_digest(self.backend, sp, project,
+                                 budget_tokens=max_tokens or 6000)
         if fmt == "transcript":
             return export_transcript(self.backend, sp, project)
-        return export_bundle(self.backend, sp, project)
+        return export_bundle(self.backend, sp, project, since=since)
 
     def import_project(self, project: str, data: dict) -> dict:
         """Import a previously-exported bundle into `project` (this user's scope)."""
@@ -174,6 +200,123 @@ class Continuum:
         with a checkpoint recommendation. Pass the current transcript as `live_text`."""
         win = window or window_for(model)
         return context_report(self.backend, self._scope(project), project, live_text, win)
+
+    # ---- autopilot: watch the window, auto-hand you a portable export at the threshold --------
+    def autopilot(
+        self, project: str, live_text: str = "", model: str = "", threshold_pct: int = 80
+    ) -> dict:
+        """One call that (1) gauges context health and (2), when the window crosses `threshold_pct`
+        (or nothing is captured yet), returns a ready-to-paste export so you can switch to a fresh
+        tab / another provider before reasoning-state is lost. This is the buildable core of the
+        "auto-export at 80%" ask — surfaces (dashboard bar, MCP tool) trigger on `switch_now`."""
+        report = self.context(project, live_text=live_text, model=model)
+        window_over = report["window_used_pct"] >= threshold_pct
+        over = window_over or report["action"] == "checkpoint_now"
+        if not over:
+            reason = ""
+        elif window_over:
+            reason = f"context window ≥ {threshold_pct}% ({report['window_used_pct']}%)"
+        elif not report["captured"]:
+            reason = "nothing checkpointed yet"
+        else:
+            reason = f"{report['unsaved_pct']}% of this chat is uncaptured (drift)"
+        result = {
+            "project": project,
+            "threshold_pct": threshold_pct,
+            "window_used_pct": report["window_used_pct"],
+            "zone": report["zone"],
+            "strength": report["strength"],
+            "switch_now": bool(over),
+            "reason": reason,
+            "gauge": render_gauge(report),
+            "recommendation": report["recommendation"],
+            "export": None,
+        }
+        if over:
+            result["export"] = export_markdown(
+                self.backend, self._scope(project), project, max_tokens=6000
+            )
+        return result
+
+    # ---- session auto-capture: buffer each turn, checkpoint automatically at a threshold -----
+    def observe(
+        self, project: str, turn_text: str, flush_tokens: int = 6000, force: bool = False
+    ) -> dict:
+        """Append one conversation turn to a rolling session buffer and auto-checkpoint when the
+        buffer grows past `flush_tokens` (or `force=True`). Call this every turn to save a whole
+        session with no explicit "save" — the buffer persists under CONTINUUM_HOME so it survives
+        across calls within a session. Returns whether a checkpoint fired."""
+        buf_path = self._buffer_path(project)
+        prior = buf_path.read_text() if buf_path.exists() else ""
+        buffer = (prior + "\n\n" + turn_text).strip() if prior else turn_text.strip()
+        tokens = max(1, len(buffer) // 4)
+
+        if force or tokens >= flush_tokens:
+            ws = self.checkpoint(project, buffer)
+            buf_path.write_text("")  # clear the buffer after a successful checkpoint
+            return {
+                "project": project, "checkpointed": True, "checkpoint_id": ws.checkpoint_id,
+                "decisions": len(ws.decisions), "buffered_tokens": 0,
+            }
+        buf_path.write_text(buffer)
+        return {
+            "project": project, "checkpointed": False, "buffered_tokens": tokens,
+            "flush_at": flush_tokens,
+        }
+
+    def _buffer_path(self, project: str):
+        from pathlib import Path
+        d = Path(self.config.db_path).parent / "buffers"
+        d.mkdir(parents=True, exist_ok=True)
+        safe = self._scope(project).replace("::", "__").replace("/", "_")
+        return d / f"{safe}.txt"
+
+    # ---- hook-driven autosave: read the live session file, checkpoint on real growth -----------
+    def autosave(
+        self,
+        project: str,
+        source: str = "claude_code",
+        path: Optional[str] = None,
+        min_new_tokens: int = 1500,
+    ) -> dict:
+        """Read the CURRENT session transcript straight from the tool's on-disk store and
+        checkpoint it — but only when it has grown by `min_new_tokens` since the last autosave
+        (debounced, so a Stop/after-turn hook can fire every turn without spamming checkpoints).
+
+        This is the *genuinely automatic* path: a client hook (e.g. Claude Code's Stop hook) calls
+        this after every turn; no model cooperation needed. Returns whether a checkpoint fired."""
+        from continuum import adapters
+
+        p = path or adapters.latest_session(source)
+        if not p:
+            return {"saved": False, "reason": f"no {source} session found"}
+        text = adapters.parse_file(p, source)
+        if not text.strip():
+            return {"saved": False, "reason": "empty transcript"}
+
+        toks = max(1, len(text) // 4)
+        marker = self._autosave_marker(project)
+        last = 0
+        if marker.exists():
+            try:
+                last = int(marker.read_text().strip() or "0")
+            except ValueError:
+                last = 0
+        if toks - last < min_new_tokens:
+            return {"saved": False, "new_tokens": max(0, toks - last),
+                    "min_new_tokens": min_new_tokens, "session_tokens": toks}
+
+        ws = self.checkpoint(project, text)
+        marker.write_text(str(toks))
+        return {"saved": True, "project": project, "checkpoint_id": ws.checkpoint_id,
+                "decisions": len(ws.decisions), "session_tokens": toks, "source": source}
+
+    def _autosave_marker(self, project: str):
+        from pathlib import Path
+        d = Path(self.config.db_path).parent / "buffers"
+        d.mkdir(parents=True, exist_ok=True)
+        safe = self._scope(project).replace("::", "__").replace("/", "_")
+        return d / f"{safe}.autosave"
 
     # ---- ingest reference docs (knowledge, not a conversation) ----------------
     def ingest(self, project: str, text: str, source: str = "doc") -> dict:

@@ -42,11 +42,29 @@ def checkpoint(source, project: str) -> None:
 @main.command()
 @click.option("--project", "-p", required=True, help="Project/thread name.")
 @click.option("--intent", "-i", default="", help="What you're resuming toward.")
+@click.option("--topic", "-T", default="", help="Recall by SUBJECT across ALL checkpoints (not just latest).")
 @click.option("--budget", "-b", default=None, type=int, help="Max tokens for the package.")
-def resume(project: str, intent: str, budget: int | None) -> None:
-    """Print a resume package — paste it into ANY new chat/provider to continue."""
+def resume(project: str, intent: str, topic: str, budget: int | None) -> None:
+    """Print a resume package — paste it into ANY new chat/provider to continue.
+
+    With --topic, gathers every checkpoint about that subject across the whole history (recall),
+    instead of only the most recent checkpoint.
+    """
     c = Continuum()
-    click.echo(c.resume(project, intent=intent, budget_tokens=budget))
+    if topic:
+        click.echo(c.recall(project, topic, budget_tokens=budget))
+    else:
+        click.echo(c.resume(project, intent=intent, budget_tokens=budget))
+
+
+@main.command()
+@click.option("--project", "-p", required=True, help="Project/thread name.")
+@click.argument("subject")
+@click.option("--budget", "-b", default=None, type=int, help="Max tokens for the package.")
+def recall(project: str, subject: str, budget: int | None) -> None:
+    """Recall by SUBJECT across the WHOLE project history — every checkpoint about a topic/intent,
+    not just the latest. Example: continuum recall -p x "dna mutation"."""
+    click.echo(Continuum().recall(project, subject, budget_tokens=budget))
 
 
 @main.command()
@@ -198,15 +216,85 @@ def lessons() -> None:
 @main.command()
 @click.option("--project", "-p", required=True)
 @click.option("--format", "-f", "fmt", default="json",
-              type=click.Choice(["json", "md", "transcript"]),
-              help="json = lossless bundle; md = reasoning-state doc; transcript = full conversation.")
+              type=click.Choice(["json", "md", "digest", "transcript"]),
+              help="json = lossless bundle; md = reasoning-state doc; digest = compressed "
+                   "(recent full, older summarized) for long work; transcript = full conversation.")
+@click.option("--max-tokens", default=None, type=int,
+              help="Bound the output to fit a context window (md/digest).")
+@click.option("--since", default=None, type=float,
+              help="Only include checkpoints newer than this unix timestamp (incremental md/json).")
 @click.option("--out", "-o", type=click.File("w"), default="-",
               help="Write to a file (default: stdout).")
-def export(project: str, fmt: str, out) -> None:
+def export(project: str, fmt: str, max_tokens: int | None, since: float | None, out) -> None:
     """Export a project to move it to a new chat, another platform, or a backup."""
-    data = Continuum().export(project, fmt=fmt)
+    data = Continuum().export(project, fmt=fmt, max_tokens=max_tokens, since=since)
     text = data if isinstance(data, str) else json.dumps(data, indent=2)
     out.write(text + ("\n" if not text.endswith("\n") else ""))
+
+
+@main.command()
+@click.option("--project", "-p", required=True)
+@click.option("--text", "-t", "source", type=click.File("r"), default=None,
+              help="Current conversation transcript (file or '-' for stdin).")
+@click.option("--model", "-m", default="", help="Model family (claude/gpt/gemini/grok).")
+@click.option("--threshold", default=80, type=int, help="Auto-export when window fill ≥ this %.")
+def autopilot(project: str, source, model: str, threshold: int) -> None:
+    """Watch context health and auto-emit a portable export when the window crosses the threshold —
+    so you know exactly when (and with what) to switch to a fresh tab or another provider."""
+    live = source.read() if source else ""
+    res = Continuum().autopilot(project, live_text=live, model=model, threshold_pct=threshold)
+    click.echo(res["gauge"])
+    if res["switch_now"]:
+        click.echo(click.style(f"\n⚠ switch now — {res['reason']}. Portable export:\n", fg="yellow"))
+        click.echo(res["export"])
+    else:
+        click.echo(click.style("\n✓ healthy — keep working.", fg="green"))
+
+
+@main.command()
+@click.option("--project", "-p", default=None,
+              help="Project (default: $CONTINUUM_PROJECT or the current directory name).")
+@click.option("--source", "-F", default="claude_code",
+              type=click.Choice(["claude_code", "codex", "grok", "auto"]),
+              help="Which tool's live session to read.")
+@click.option("--file", "path", type=click.Path(exists=True), default=None,
+              help="Explicit session file (e.g. a hook's transcript_path). Else uses the latest.")
+@click.option("--min-new-tokens", default=1500, type=int,
+              help="Only checkpoint when the session grew by at least this many tokens (debounce).")
+@click.option("--quiet", is_flag=True, help="Print nothing when nothing was saved (for hooks).")
+def autosave(project: str | None, source: str, path: str | None,
+             min_new_tokens: int, quiet: bool) -> None:
+    """Genuinely-automatic save: read the CURRENT session file and checkpoint it, debounced by
+    real growth. Wire this to Claude Code's Stop hook to save every turn with no model help.
+
+    Example Claude Code hook command:  continuum autosave --source claude_code --quiet
+    """
+    project = project or os.getenv("CONTINUUM_PROJECT") or os.path.basename(os.getcwd()) or "session"
+    res = Continuum().autosave(project, source=source, path=path, min_new_tokens=min_new_tokens)
+    if res.get("saved"):
+        click.echo(click.style("✓ autosave", fg="green")
+                   + f"  project={project}  id={res['checkpoint_id']}  decisions={res['decisions']}")
+    elif not quiet:
+        why = res.get("reason") or f"only +{res.get('new_tokens', 0)} tokens (need {min_new_tokens})"
+        click.echo(f"autosave skipped: {why}")
+
+
+@main.command()
+@click.option("--project", "-p", required=True)
+@click.argument("turn", type=click.File("r"), default="-")
+@click.option("--flush-tokens", default=6000, type=int, help="Auto-checkpoint when buffer ≥ this.")
+@click.option("--force", is_flag=True, help="Checkpoint the buffered session now.")
+def observe(project: str, turn, flush_tokens: int, force: bool) -> None:
+    """Append one turn to a rolling session buffer; auto-checkpoints at the threshold. Call it each
+    turn to save a whole session with no explicit 'save'. Use --force to flush now."""
+    text = turn.read()
+    res = Continuum().observe(project, text, flush_tokens=flush_tokens, force=force)
+    if res["checkpointed"]:
+        click.echo(click.style("✓ auto-checkpoint", fg="green")
+                   + f"  id={res['checkpoint_id']}  decisions={res['decisions']}")
+    else:
+        click.echo(f"buffered {res['buffered_tokens']}/{res['flush_at']} tokens "
+                   f"(checkpoints automatically at the threshold)")
 
 
 @main.command(name="import")

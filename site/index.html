@@ -1,842 +1,1113 @@
-<title>Continuum, the reasoning memory for AI</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Continuum, portable reasoning-state memory for AI</title>
+<meta name="description" content="Every AI forgets your reasoning when a chat ends. Continuum saves it and resumes it in any other AI, months later, exactly as you left it. Free to start.">
+<meta property="og:title" content="Continuum. Your AI forgets why. Continuum remembers.">
+<meta property="og:description" content="Portable reasoning-state memory. Animated walkthrough, per-tool problem map, pricing, and FAQ. Live MCP endpoint.">
+<style>html{margin:0}body{margin:0}</style>
+</head>
+<body>
 <style>
-  :root {
-    --bg: #0B0F17;
-    --surface: #141B27;
-    --surface-2: #10161F;
-    --border: #253044;
-    --border-soft: #1B2433;
-    --text: #E7EDF6;
-    --muted: #94A2B8;
-    --faint: #64748B;
-    --accent: #5B9DFF;
-    --accent-2: #2E6BE6;
-    --accent-ink: #04122E;
-    --secondary: #9E86F0;
-    --good: #43C892;
-    --warn: #E9A23B;
-    --crit: #F1687E;
-    --glow: rgba(91,157,255,.16);
-
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --mono: ui-monospace, "JetBrains Mono", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
-    --maxw: 1120px;
-    --prose: 64ch;
-    --r: 14px;
-    --step: clamp(1rem, .9rem + .5vw, 1.15rem);
+  :root{
+    --ground:#0e1315; --panel:#141d1f; --panel-2:#1a2528; --raise:#20302f;
+    --ink:#e8efec; --ink-soft:#c3d0cb; --muted:#7f938e; --faint:#5a6c68;
+    --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.055);
+    --accent:#37c6a6; --accent-deep:#1f9a80; --btn-fg:#04211b;
+    --brass:#c9a24b; --good:#5ec27a; --warn:#e3a83f; --crit:#e56a60;
+    --thread:#4fe0bd;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --body:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --max:1120px; --r:12px;
+    --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 20px 50px -30px rgba(0,0,0,.7);
   }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #F6F8FC; --surface: #FFFFFF; --surface-2: #F1F5FA; --border: #E1E8F1;
-      --border-soft: #EDF1F7; --text: #0C1524; --muted: #566074; --faint: #93A0B4;
-      --accent: #2563EB; --accent-2: #1D4FD0; --accent-ink: #FFFFFF; --secondary: #6D4FE0;
-      --good: #1E9E68; --warn: #B9701C; --crit: #C9556A; --glow: rgba(37,99,235,.12);
+  @media (prefers-color-scheme: light){
+    :root{
+      --ground:#eef2f0; --panel:#ffffff; --panel-2:#f4f7f5; --raise:#e7ede9;
+      --ink:#0e1a17; --ink-soft:#28352f; --muted:#5a6b66; --faint:#8a9a94;
+      --line:rgba(10,30,25,.12); --line-2:rgba(10,30,25,.07);
+      --accent:#12876f; --accent-deep:#0c6a57; --thread:#12a184; --btn-fg:#ffffff;
+      --shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 22px 50px -34px rgba(20,50,45,.4);
     }
   }
-  :root[data-theme="dark"] {
-    --bg: #0B0F17; --surface: #141B27; --surface-2: #10161F; --border: #253044;
-    --border-soft: #1B2433; --text: #E7EDF6; --muted: #94A2B8; --faint: #64748B;
-    --accent: #5B9DFF; --accent-2: #2E6BE6; --accent-ink: #04122E; --secondary: #9E86F0;
-    --good: #43C892; --warn: #E9A23B; --crit: #F1687E; --glow: rgba(91,157,255,.16);
+  :root[data-theme="dark"]{
+    --ground:#0e1315; --panel:#141d1f; --panel-2:#1a2528; --raise:#20302f;
+    --ink:#e8efec; --ink-soft:#c3d0cb; --muted:#7f938e; --faint:#5a6c68;
+    --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.055);
+    --accent:#37c6a6; --accent-deep:#1f9a80; --thread:#4fe0bd; --btn-fg:#04211b;
+    --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 20px 50px -30px rgba(0,0,0,.7);
   }
-  :root[data-theme="light"] {
-    --bg: #F6F8FC; --surface: #FFFFFF; --surface-2: #F1F5FA; --border: #E1E8F1;
-    --border-soft: #EDF1F7; --text: #0C1524; --muted: #566074; --faint: #93A0B4;
-    --accent: #2563EB; --accent-2: #1D4FD0; --accent-ink: #FFFFFF; --secondary: #6D4FE0;
-    --good: #1E9E68; --warn: #B9701C; --crit: #C9556A; --glow: rgba(37,99,235,.12);
+  :root[data-theme="light"]{
+    --ground:#eef2f0; --panel:#ffffff; --panel-2:#f4f7f5; --raise:#e7ede9;
+    --ink:#0e1a17; --ink-soft:#28352f; --muted:#5a6b66; --faint:#8a9a94;
+    --line:rgba(10,30,25,.12); --line-2:rgba(10,30,25,.07);
+    --accent:#12876f; --accent-deep:#0c6a57; --thread:#12a184; --btn-fg:#ffffff;
+    --shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 22px 50px -34px rgba(20,50,45,.4);
   }
 
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-  body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font-family: var(--sans); font-size: var(--step); line-height: 1.6;
-    -webkit-font-smoothing: antialiased; overflow-x: hidden;
-  }
-  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
-  section { padding: clamp(64px, 8vw, 116px) 0; }
-  a { color: inherit; }
-  h1, h2, h3 { text-wrap: balance; line-height: 1.06; letter-spacing: -.02em; margin: 0; }
-  p { margin: 0; }
-  em { font-style: normal; color: var(--accent); }
-
-  .eyebrow { font-family: var(--mono); font-size: .72rem; letter-spacing: .22em;
-    text-transform: uppercase; color: var(--accent); font-weight: 600; }
-  .lead { color: var(--muted); max-width: var(--prose); font-size: 1.06rem; }
-  .kicker { font-family: var(--mono); font-size: .7rem; letter-spacing: .18em;
-    text-transform: uppercase; color: var(--faint); }
-  .head { max-width: 760px; margin-bottom: 46px; display: flex; flex-direction: column; gap: 14px; }
-  .head h2 { font-size: clamp(1.9rem, 1.4rem + 1.8vw, 3rem); font-weight: 800; }
-
-  /* announcement */
-  .announce { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 20%, var(--bg)), var(--bg) 68%);
-    border-bottom: 1px solid var(--border-soft); font-family: var(--mono); font-size: .74rem; color: var(--text); }
-  .announce .in { max-width: var(--maxw); margin: 0 auto; padding: 8px 24px; display: flex; gap: 10px;
-    align-items: center; justify-content: center; text-align: center; flex-wrap: wrap; }
-  .announce .pill { color: var(--accent-ink); background: var(--accent); border-radius: 999px;
-    padding: 2px 9px; font-weight: 700; font-size: .64rem; letter-spacing: .1em; }
-  .announce a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
-  .announce a:hover { border-color: var(--accent); }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; background:var(--ground); color:var(--ink); font-family:var(--body);
+    line-height:1.6; -webkit-font-smoothing:antialiased; font-size:16.5px; overflow-x:hidden}
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 24px}
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3{text-wrap:balance; margin:0; letter-spacing:-.02em; font-weight:650}
+  h2{font-size:clamp(1.55rem,3.4vw,2.35rem); line-height:1.1}
+  p{margin:0}
+  .mono{font-family:var(--mono)}
+  .eyebrow{font-family:var(--mono); font-size:.74rem; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); font-weight:600}
+  .muted{color:var(--muted)}
+  .tnum{font-variant-numeric:tabular-nums}
 
   /* nav */
-  header.nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px);
-    background: color-mix(in srgb, var(--bg) 84%, transparent); border-bottom: 1px solid var(--border-soft); }
-  .nav-in { display: flex; align-items: center; gap: 24px; height: 62px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
-  .brand .mark { width: 26px; height: 26px; flex: none; border-radius: 8px;
-    background: radial-gradient(circle at 30% 28%, var(--accent), var(--accent-2)); box-shadow: 0 0 18px var(--glow); position: relative; }
-  .brand .mark::after { content: ""; position: absolute; inset: 0; border-radius: 8px;
-    background: linear-gradient(transparent 46%, var(--accent-ink) 47%, var(--accent-ink) 53%, transparent 54%); opacity: .45; }
-  .nav-links { display: none; gap: 22px; margin-left: auto; font-family: var(--mono); font-size: .8rem; }
-  .nav-links a { color: var(--muted); text-decoration: none; }
-  .nav-links a:hover { color: var(--text); }
-  .nav-cta { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-  @media (min-width: 900px) { .nav-links { display: flex; } .nav-cta { margin-left: 0; } }
+  nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:color-mix(in srgb, var(--ground) 80%, transparent); border-bottom:1px solid var(--line-2)}
+  .nav-in{display:flex; align-items:center; gap:20px; height:60px}
+  .brand{font-family:var(--mono); font-weight:600; letter-spacing:-.02em; font-size:1.05rem; display:flex; align-items:center; gap:9px}
+  .brand .dot{width:9px; height:9px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%, transparent)}
+  .nav-links{display:flex; gap:22px; margin-left:auto; align-items:center}
+  .nav-links a{font-size:.9rem; color:var(--muted); transition:color .18s}
+  .nav-links a:hover{color:var(--ink)}
+  .live{font-family:var(--mono); font-size:.72rem; letter-spacing:.1em; color:var(--good); display:inline-flex; align-items:center; gap:6px}
+  .live .pulse{width:7px;height:7px;border-radius:50%;background:var(--good); animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 55%,transparent)}50%{opacity:.6;box-shadow:0 0 0 6px transparent}}
+  @media(max-width:760px){.nav-links a:not(.btn-sm){display:none}}
 
-  .btn { font-family: var(--mono); font-size: .82rem; font-weight: 600; border-radius: 9px; padding: 10px 16px;
-    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
-    border: 1px solid transparent; transition: transform .12s ease, background .15s ease, border-color .15s ease; }
-  .btn:active { transform: translateY(1px); }
-  .btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 8px 26px -10px var(--glow); }
-  .btn-primary:hover { background: color-mix(in srgb, var(--accent) 86%, white); }
-  .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .theme-toggle { font-family: var(--mono); font-size: .95rem; background: transparent; color: var(--muted);
-    border: 1px solid var(--border); border-radius: 9px; width: 38px; height: 38px; cursor: pointer; }
-  .theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+  .btn{font-family:var(--mono); font-size:.85rem; font-weight:650; display:inline-flex; align-items:center; gap:9px;
+    padding:11px 18px; border-radius:10px; background:var(--accent); color:var(--btn-fg); border:1px solid transparent; cursor:pointer;
+    box-shadow:0 6px 18px -9px color-mix(in srgb,var(--accent) 75%, transparent);
+    transition:transform .15s, box-shadow .2s, filter .15s}
+  .btn:hover{transform:translateY(-1px); filter:brightness(1.04); box-shadow:0 12px 26px -10px color-mix(in srgb,var(--accent) 80%, transparent)}
+  .btn.ghost{background:transparent; color:var(--ink); border-color:var(--line)}
+  .btn.ghost:hover{border-color:var(--accent); color:var(--accent)}
+  .btn-sm{padding:9px 16px; font-size:.82rem; letter-spacing:.01em}
+  .chev{width:6px;height:6px;border-right:2px solid currentColor;border-top:2px solid currentColor;transform:rotate(45deg);display:inline-block}
 
   /* hero */
-  .hero { padding-top: clamp(40px, 6vw, 68px); position: relative; overflow: hidden; }
-  .aurora { position: absolute; inset: -22% -10% auto -10%; height: 540px; z-index: -1;
-    background: radial-gradient(40% 55% at 20% 16%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 70%),
-      radial-gradient(40% 52% at 84% 6%, color-mix(in srgb, var(--secondary) 26%, transparent), transparent 70%);
-    filter: blur(26px); opacity: .8; animation: drift 18s ease-in-out infinite alternate; }
-  @keyframes drift { from { transform: translate3d(-2%, -1%, 0) scale(1); } to { transform: translate3d(3%, 2%, 0) scale(1.08); } }
-  @media (prefers-reduced-motion: reduce) { .aurora { animation: none; } }
-  .hero h1 { font-size: clamp(2.5rem, 5.2vw, 4.5rem); font-weight: 800; max-width: 16ch; margin-bottom: 22px; }
-  .hero h1 .hl { color: var(--accent); }
-  .hero .lead { font-size: clamp(1.05rem, 1rem + .4vw, 1.24rem); margin-bottom: 30px; }
-  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; }
-  .provider-strip { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin-top: 26px;
-    font-family: var(--mono); font-size: .78rem; color: var(--muted); }
-  .provider-strip .lab { color: var(--faint); letter-spacing: .12em; text-transform: uppercase; font-size: .64rem; }
-  .provider-strip b { color: var(--text); font-weight: 600; }
-  .provider-strip .bar { width: 1px; height: 14px; background: var(--border); }
-
-  .signal-panel { margin-top: 44px; border: 1px solid var(--border); border-radius: var(--r);
-    background: linear-gradient(180deg, var(--surface), var(--surface-2)); overflow: hidden;
-    box-shadow: 0 34px 90px -55px rgba(0,0,0,.7); }
-  .panel-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px;
-    border-bottom: 1px solid var(--border-soft); font-family: var(--mono); font-size: .74rem; color: var(--muted); }
-  .dot { width: 9px; height: 9px; border-radius: 50%; }
-  .dot.r { background: #ef6a6a; } .dot.y { background: #e6b64c; } .dot.g { background: var(--good); }
-  .panel-head .path { margin-left: 8px; }
-  .panel-head .tag { margin-left: auto; color: var(--accent); }
-  canvas#signal { display: block; width: 100%; height: 260px; }
-
-  /* architecture */
-  .define { font-size: clamp(1.3rem, 1rem + 1.6vw, 2rem); font-weight: 700; line-height: 1.3; max-width: 20ch; letter-spacing: -.02em; }
-  .define .hl { color: var(--accent); }
-  .arch-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r);
-    background: linear-gradient(180deg, var(--surface), var(--surface-2)); padding: 10px; }
-  svg.arch { display: block; width: 100%; min-width: 680px; height: auto; font-family: var(--mono); }
-  svg.arch .node { fill: var(--surface); stroke: var(--border); }
-  svg.arch .node-lbl { fill: var(--text); font-size: 15px; font-weight: 600; }
-  svg.arch .hub { fill: color-mix(in srgb, var(--accent) 10%, var(--surface)); stroke: var(--accent); }
-  svg.arch .hub-title { fill: var(--accent); font-size: 15px; font-weight: 700; letter-spacing: 1px; }
-  svg.arch .layer { fill: var(--surface); stroke: var(--border-soft); }
-  svg.arch .layer-lbl { fill: var(--muted); font-size: 12.5px; }
-  svg.arch .cap { fill: var(--faint); font-size: 12px; }
-  svg.arch .conn { fill: none; stroke: var(--accent); stroke-width: 2; opacity: .6; stroke-dasharray: 5 9; animation: flow 1.1s linear infinite; }
-  svg.arch .conn.rev { animation-direction: reverse; stroke: var(--secondary); }
-  @keyframes flow { to { stroke-dashoffset: -14; } }
-  @media (prefers-reduced-motion: reduce) { svg.arch .conn { animation: none; } }
-  svg.arch .glow { fill: var(--accent); opacity: 0; animation: hubpulse 2.8s ease-in-out infinite; }
-  @keyframes hubpulse { 0%,100% { opacity: 0; } 50% { opacity: .1; } }
-
-  /* radar comparison */
-  .radar-wrap { display: grid; gap: 30px; grid-template-columns: 1fr; align-items: center; }
-  @media (min-width: 900px) { .radar-wrap { grid-template-columns: 1.05fr .95fr; } }
-  .radar-card { border: 1px solid var(--border); border-radius: var(--r); background: linear-gradient(180deg, var(--surface), var(--surface-2)); padding: 20px; }
-  svg.radar { width: 100%; height: auto; overflow: visible; font-family: var(--mono); }
-  svg.radar .r-ring { fill: none; stroke: var(--border-soft); }
-  svg.radar .r-axis { stroke: var(--border); }
-  svg.radar .r-lbl { fill: var(--muted); font-size: 11px; }
-  svg.radar .r-others { fill: color-mix(in srgb, var(--secondary) 26%, transparent); stroke: var(--secondary); stroke-width: 1.5; }
-  svg.radar .r-us { fill: color-mix(in srgb, var(--accent) 22%, transparent); stroke: var(--accent); stroke-width: 2.5;
-    transform-box: fill-box; transform-origin: center; animation: grow 1s cubic-bezier(.2,.8,.2,1) both; }
-  @keyframes grow { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: scale(1); } }
-  @media (prefers-reduced-motion: reduce) { svg.radar .r-us { animation: none; } }
-  .rlegend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 8px; font-family: var(--mono); font-size: .76rem; color: var(--muted); }
-  .rlegend span { display: inline-flex; align-items: center; gap: 8px; }
-  .rlegend .sw { width: 14px; height: 14px; border-radius: 4px; }
-  .rlegend .sw.us { background: color-mix(in srgb, var(--accent) 55%, transparent); border: 1.5px solid var(--accent); }
-  .rlegend .sw.ot { background: color-mix(in srgb, var(--secondary) 45%, transparent); border: 1.5px solid var(--secondary); }
-  .rpoints { display: flex; flex-direction: column; gap: 14px; }
-  .rpoint { display: flex; gap: 12px; align-items: flex-start; }
-  .rpoint .k { font-family: var(--mono); color: var(--accent); font-weight: 700; flex: none; }
-  .rpoint p { color: var(--muted); font-size: .95rem; }
-  .rnote { font-family: var(--mono); font-size: .78rem; color: var(--faint); margin-top: 4px; }
-
-  /* pillars */
-  .pillars { display: grid; gap: 16px; grid-template-columns: 1fr; }
-  @media (min-width: 720px) { .pillars { grid-template-columns: repeat(2, 1fr); } }
-  .pillar { border: 1px solid var(--border); border-radius: var(--r); padding: 24px; background: var(--surface);
-    display: flex; flex-direction: column; gap: 12px; }
-  .pillar .picon { width: 52px; height: 52px; border-radius: 12px; border: 1px solid var(--border-soft);
-    background: var(--surface-2); display: grid; place-items: center; }
-  .pillar .picon svg { width: 30px; height: 30px; }
-  .pi-stroke { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-  .pi-fill { fill: var(--accent); }
-  .pi-sec { stroke: var(--secondary); }
-  .pi-pulse { animation: pip 1.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-  @keyframes pip { 0%,100% { opacity: .35; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.1); } }
-  .pi-dash { stroke-dasharray: 4 5; animation: flow 1.1s linear infinite; }
-  .pi-rise { animation: pirise 2.4s ease-in-out infinite; }
-  @keyframes pirise { 0%,100% { transform: translateY(2px); } 50% { transform: translateY(-2px); } }
-  @media (prefers-reduced-motion: reduce) { .pi-pulse, .pi-dash, .pi-rise { animation: none; } }
-  .pillar .pn { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
-  .pillar h3 { font-size: 1.18rem; font-weight: 700; }
-  .pillar p { color: var(--muted); font-size: .94rem; }
-  .pillar .proof { font-family: var(--mono); font-size: .74rem; color: var(--good); }
-
-  /* how it works flow */
-  .flow { display: grid; gap: 18px; grid-template-columns: 1fr; counter-reset: step; }
-  @media (min-width: 820px) { .flow.three { grid-template-columns: repeat(3, 1fr); } }
-  .flow-step { position: relative; border: 1px solid var(--border); border-radius: var(--r);
-    padding: 26px 24px; background: var(--surface); display: flex; flex-direction: column; gap: 12px; }
-  .flow-step .idx { font-family: var(--mono); font-size: .74rem; color: var(--accent); letter-spacing: .1em; display: flex; align-items: center; gap: 8px; }
-  .flow-step .idx::before { counter-increment: step; content: counter(step, decimal-leading-zero);
-    color: var(--accent-ink); background: var(--accent); border-radius: 6px; padding: 2px 7px; font-weight: 700; }
-  .flow-step h3 { font-size: 1.14rem; font-weight: 700; }
-  .flow-step p { color: var(--muted); font-size: .94rem; }
-  .flow-step code { font-family: var(--mono); font-size: .8rem; color: var(--accent); background: var(--surface-2);
-    border: 1px solid var(--border-soft); border-radius: 7px; padding: 8px 10px; display: block; overflow-x: auto; white-space: nowrap; }
+  header.hero{position:relative; overflow:hidden; border-bottom:1px solid var(--line-2)}
+  #thread-canvas{position:absolute; inset:0; width:100%; height:100%; z-index:0; opacity:.85}
+  .hero-in{position:relative; z-index:2; padding:clamp(52px,8vw,96px) 0 clamp(44px,6vw,76px)}
+  .hero-grid{display:grid; grid-template-columns:1.05fr .95fr; gap:48px; align-items:center}
+  @media(max-width:900px){.hero-grid{grid-template-columns:1fr; gap:38px}}
+  .hero h1{font-size:clamp(2.3rem,6vw,4rem); line-height:1.02; letter-spacing:-.035em; font-weight:700}
+  .hero h1 .g{color:var(--accent)}
+  .hero .lede{margin-top:20px; font-size:clamp(1.02rem,1.8vw,1.18rem); color:var(--ink-soft); max-width:34ch}
+  .hero-cta{display:flex; gap:12px; margin-top:28px; flex-wrap:wrap; align-items:center}
+  .urlbar{margin-top:20px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .urlpill{font-family:var(--mono); font-size:.8rem; color:var(--ink-soft); background:var(--panel); border:1px solid var(--line);
+    border-radius:8px; padding:9px 13px; display:inline-flex; gap:10px; align-items:center; cursor:pointer; transition:border-color .18s}
+  .urlpill:hover{border-color:var(--accent)}
+  .urlpill .k{color:var(--accent)}
+  .copy-hint{font-family:var(--mono); font-size:.72rem; color:var(--muted)}
+  .stat-row{display:flex; gap:28px; margin-top:32px; flex-wrap:wrap}
+  .stat b{font-family:var(--mono); font-size:1.5rem; color:var(--ink); font-weight:650; letter-spacing:-.02em}
+  .stat span{display:block; font-size:.78rem; color:var(--muted); margin-top:2px}
 
   /* terminal */
-  .term { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: #0A0D22;
-    box-shadow: 0 30px 80px -52px rgba(0,0,0,.8); }
-  :root[data-theme="light"] .term { background: #12162e; }
-  .term-body { padding: 18px; font-family: var(--mono); font-size: .82rem; line-height: 1.65; min-height: 318px;
-    color: #cfd2f2; white-space: pre-wrap; }
-  .term-body .l-cmd { color: #eef0ff; }
-  .term-body .l-cmd .pr { color: var(--accent); }
-  .term-body .l-out { color: #969ad0; }
-  .term-body .l-out .hl { color: var(--accent); }
-  .term-body .caret { display: inline-block; width: 8px; height: 1.05em; vertical-align: -2px; background: var(--accent);
-    animation: blink 1s steps(1) infinite; }
-  @keyframes blink { 50% { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .term-body .caret { animation: none; } }
+  .term{background:linear-gradient(180deg,var(--panel),color-mix(in srgb,var(--panel) 92%, var(--ground)));
+    border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); overflow:hidden; font-family:var(--mono); font-size:.85rem}
+  .term-bar{display:flex; align-items:center; gap:8px; padding:12px 15px; border-bottom:1px solid var(--line-2); background:var(--panel-2)}
+  .term-bar i{width:11px;height:11px;border-radius:50%; display:inline-block}
+  .term-bar .r{background:#ec6a5e}.term-bar .y{background:#f4bf4f}.term-bar .g{background:#61c554}
+  .term-bar .t{margin-left:8px; font-size:.72rem; color:var(--muted); letter-spacing:.03em}
+  .term-body{padding:18px; min-height:300px; line-height:1.7}
+  .term-body .ln{white-space:pre-wrap; word-break:break-word}
+  .prompt{color:var(--accent)} .cmd{color:var(--ink)} .flag{color:var(--brass)}
+  .out{color:var(--ink-soft)} .ok{color:var(--good)} .dim{color:var(--faint)}
+  .caret{display:inline-block; width:8px; height:1.05em; background:var(--accent); vertical-align:-2px; animation:blink 1.05s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
 
-  /* gauge */
-  .gauge-wrap { display: grid; gap: 32px; grid-template-columns: 1fr; align-items: center; }
-  @media (min-width: 900px) { .gauge-wrap { grid-template-columns: 1.05fr .95fr; } }
-  .gauge-panel { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); padding: 26px; font-family: var(--mono); }
-  .gauge-row { margin: 18px 0; }
-  .gauge-row .lbl { display: flex; justify-content: space-between; font-size: .76rem; color: var(--muted);
-    letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
-  .gauge-row .lbl b { color: var(--text); font-variant-numeric: tabular-nums; }
-  .bar { height: 12px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border-soft); overflow: hidden; }
-  .bar > span { display: block; height: 100%; width: 0; border-radius: 6px; transition: width .25s ease, background .25s ease; }
-  .strength-num { font-size: 3.4rem; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1; }
-  .verdict { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 8px 14px; border-radius: 999px; font-size: .82rem; border: 1px solid var(--border); }
-  .verdict .pip { width: 9px; height: 9px; border-radius: 50%; }
-  .control label { font-family: var(--mono); font-size: .78rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
-  .control input[type=range] { width: 100%; accent-color: var(--accent); margin-top: 12px; }
-  .control .val { font-family: var(--mono); color: var(--accent); font-variant-numeric: tabular-nums; }
-  .control .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; margin-top: 10px; }
-  .control .seg button { font-family: var(--mono); font-size: .76rem; padding: 7px 12px; background: transparent; color: var(--muted); border: 0; cursor: pointer; border-right: 1px solid var(--border); }
-  .control .seg button:last-child { border-right: 0; }
-  .control .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  /* sections */
+  section{padding:clamp(58px,7.5vw,100px) 0; border-bottom:1px solid var(--line-2)}
+  .sec-head{max-width:56ch}
+  .sec-head h2{margin-top:12px}
+  .sec-head p{margin-top:14px; color:var(--muted); font-size:1.04rem}
 
-  /* feature grid + console */
-  .feat-grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
-  @media (min-width: 640px) { .feat-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 980px) { .feat-grid { grid-template-columns: repeat(3, 1fr); } }
-  .feat { border: 1px solid var(--border); border-radius: var(--r); padding: 20px; background: var(--surface);
-    display: flex; flex-direction: column; gap: 8px; transition: border-color .15s ease, transform .15s ease; }
-  .feat:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .feat .verb { font-family: var(--mono); font-size: .78rem; color: var(--accent); }
-  .feat h3 { font-size: 1.02rem; font-weight: 700; }
-  .feat p { color: var(--muted); font-size: .9rem; }
-  .console { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: var(--surface-2); font-family: var(--mono); }
-  .console .pills { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px; border-bottom: 1px solid var(--border-soft); }
-  .console .pills button { font-family: var(--mono); font-size: .76rem; padding: 7px 12px; border-radius: 8px; cursor: pointer;
-    background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
-  .console .pills button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-  .console .screen { padding: 20px; font-size: .84rem; line-height: 1.7; }
-  .console .screen .cmd { color: var(--text); }
-  .console .screen .cmd::before { content: "$ "; color: var(--accent); }
-  .console .screen .out { color: var(--muted); white-space: pre-wrap; margin-top: 8px; }
-  .console .screen .out .hl { color: var(--accent); }
+  /* ============ THE JOURNEY (animated walkthrough) ============ */
+  #journey{background:
+    radial-gradient(1200px 500px at 70% -10%, color-mix(in srgb,var(--accent) 9%, transparent), transparent 60%),
+    var(--ground)}
+  .stage-wrap{margin-top:40px; border:1px solid var(--line); border-radius:18px; background:var(--panel); box-shadow:var(--shadow); overflow:hidden}
+  .stage-top{display:flex; align-items:center; gap:14px; padding:14px 18px; border-bottom:1px solid var(--line-2); background:var(--panel-2)}
+  .stage-top .sc-mono{font-family:var(--mono); font-size:.74rem; letter-spacing:.08em; color:var(--muted); text-transform:uppercase}
+  .stage-top .sc-title{font-weight:650; font-size:.98rem; letter-spacing:-.01em}
+  .stage-top .sc-count{margin-left:auto; font-family:var(--mono); font-size:.78rem; color:var(--accent)}
+  .stage{position:relative; height:clamp(360px,52vw,440px); overflow:hidden; background:
+    linear-gradient(180deg, color-mix(in srgb,var(--panel-2) 55%, var(--panel)), var(--panel))}
+  .scene{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:26px;
+    opacity:0; visibility:hidden; transition:opacity .5s ease}
+  .scene.is-on{opacity:1; visibility:visible}
+  .scene-cap{position:absolute; left:0; right:0; bottom:0; padding:16px 22px 18px;
+    background:linear-gradient(0deg, color-mix(in srgb,var(--panel) 92%, transparent), transparent);
+    display:flex; flex-direction:column; gap:3px}
+  .scene-cap h3{font-size:1.05rem; letter-spacing:-.01em}
+  .scene-cap p{color:var(--muted); font-size:.9rem}
 
-  /* add to claude mock */
-  .claude-demo { display: grid; gap: 26px; grid-template-columns: 1fr; }
-  @media (min-width: 940px) { .claude-demo { grid-template-columns: 266px 1fr; align-items: start; } }
-  .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-  .steps li { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--border); border-radius: 12px;
-    padding: 14px 16px; background: var(--surface); transition: border-color .3s, background .3s; }
-  .steps li .num { font-family: var(--mono); font-weight: 700; font-size: .8rem; width: 24px; height: 24px; flex: none;
-    display: grid; place-items: center; border-radius: 7px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
-  .steps li .st { font-size: .92rem; font-weight: 600; }
-  .steps li .st small { display: block; color: var(--muted); font-weight: 400; font-size: .8rem; margin-top: 2px; }
-  .steps li.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
-  .steps li.on .num { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-  .uiwin { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: #0B0F27; box-shadow: 0 40px 90px -58px rgba(0,0,0,.85); }
-  :root[data-theme="light"] .uiwin { background: #10152e; }
-  .uibar { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-bottom: 1px solid #262c58; }
-  .uibar .url { margin-left: 8px; flex: 1; background: #141a3c; border: 1px solid #2b3268; border-radius: 8px;
-    font-family: var(--mono); font-size: .72rem; color: #a9adde; padding: 6px 12px; }
-  .stage { position: relative; }
-  .scene { display: none; padding: 24px 22px 28px; flex-direction: column; gap: 14px; min-height: 300px; }
-  .scene.active { display: flex; animation: sfade .5s ease; }
-  @keyframes sfade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  .scene .scene-t { font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
-  .rise { opacity: 0; transform: translateY(8px); }
-  .scene.active .rise { animation: rise .5s ease forwards; }
-  .scene.active .rise:nth-child(2) { animation-delay: .15s; }
-  .scene.active .rise:nth-child(3) { animation-delay: .5s; }
-  .scene.active .rise:nth-child(4) { animation-delay: .95s; }
-  .scene.active .rise:nth-child(5) { animation-delay: 1.4s; }
-  @keyframes rise { to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) {
-    .claude-demo.rm .scene { display: flex; animation: none; }
-    .rise { opacity: 1; transform: none; animation: none; }
+  .stage-controls{display:flex; align-items:center; gap:10px; padding:13px 18px; border-top:1px solid var(--line-2); background:var(--panel-2)}
+  .dots{display:flex; gap:8px; margin:0 auto}
+  .dots button{width:26px; height:6px; border-radius:6px; border:none; background:var(--line); cursor:pointer; transition:.25s; padding:0}
+  .dots button[aria-current="true"]{background:var(--accent); width:38px}
+  .ctrl{width:34px; height:34px; border-radius:9px; border:1px solid var(--line); background:var(--panel); color:var(--ink);
+    cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:.18s}
+  .ctrl:hover{border-color:var(--accent); color:var(--accent)}
+  .ico-prev{width:6px;height:6px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg)}
+  .ico-next{width:6px;height:6px;border-right:2px solid currentColor;border-top:2px solid currentColor;transform:rotate(45deg)}
+  .ico-pause{display:flex;gap:3px}.ico-pause i{width:3px;height:11px;background:currentColor;display:block}
+  .ico-play{width:0;height:0;border-left:9px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:2px}
+  .progress{position:absolute; left:0; top:0; height:3px; background:var(--accent); width:0; z-index:5}
+
+  /* scene building blocks */
+  .glass{background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow)}
+  .win{width:min(320px,80%)}
+  .win .wb{display:flex; gap:6px; padding:9px 12px; border-bottom:1px solid var(--line-2); align-items:center}
+  .win .wb i{width:9px;height:9px;border-radius:50%}
+  .win .wb .lab{margin-left:6px; font-family:var(--mono); font-size:.7rem; color:var(--muted)}
+  .win .wc{padding:14px}
+  .bub{border-radius:10px; padding:9px 12px; font-size:.86rem; margin-bottom:9px; max-width:88%}
+  .bub.u{background:var(--panel-2); border:1px solid var(--line-2); margin-left:auto; color:var(--ink-soft)}
+  .bub.a{background:color-mix(in srgb,var(--accent) 12%, var(--panel)); border:1px solid color-mix(in srgb,var(--accent) 30%, var(--line)); color:var(--ink)}
+  .rgraph{display:flex; gap:10px; align-items:center; margin-top:6px; flex-wrap:wrap}
+  .rnode{font-family:var(--mono); font-size:.72rem; padding:6px 10px; border-radius:20px; border:1px solid var(--line); background:var(--panel-2)}
+  .rnode.dec{color:var(--accent); border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+  .rnode.rej{color:var(--crit); border-color:color-mix(in srgb,var(--crit) 40%,var(--line))}
+  .rnode.op{color:var(--brass); border-color:color-mix(in srgb,var(--brass) 40%,var(--line))}
+
+  .core{width:132px; height:132px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 40% 35%, color-mix(in srgb,var(--accent) 40%, var(--panel)), var(--panel-2));
+    border:1px solid color-mix(in srgb,var(--accent) 45%, var(--line)); box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 8%, transparent)}
+  .core b{font-family:var(--mono); font-size:.82rem; color:var(--ink)}
+  .core span{font-family:var(--mono); font-size:.62rem; color:var(--muted); letter-spacing:.1em; text-transform:uppercase}
+  .ctxbar{width:min(380px,84%); height:14px; border-radius:8px; background:var(--panel-2); border:1px solid var(--line-2); overflow:hidden}
+  .ctxbar i{display:block; height:100%; width:0; border-radius:8px}
+  .chip{font-family:var(--mono); font-size:.74rem; padding:6px 11px; border-radius:8px; display:inline-flex; gap:8px; align-items:center}
+  .chip.warn{color:var(--warn); background:color-mix(in srgb,var(--warn) 15%,transparent); border:1px solid color-mix(in srgb,var(--warn) 35%,transparent)}
+  .chip.ok{color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,transparent); border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+  .platgrid{display:grid; grid-template-columns:repeat(3,auto); gap:12px}
+  .plat{font-family:var(--mono); font-size:.78rem; padding:9px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel-2); color:var(--ink-soft)}
+  .rail{display:flex; align-items:center; gap:0; width:min(440px,90%)}
+  .tick{flex:1; height:2px; background:var(--line); position:relative}
+  .tick b{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:12px; height:12px; border-radius:50%;
+    background:var(--panel-2); border:1px solid var(--line)}
+  .tick.hit b{background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 18%,transparent)}
+  .turnrow{display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:.82rem; color:var(--ink-soft); margin:5px 0}
+  .savemark{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--accent);position:relative;flex:none}
+  .savemark:after{content:"";position:absolute;left:4px;top:2px;width:4px;height:8px;border-right:1.5px solid var(--accent);border-bottom:1.5px solid var(--accent);transform:rotate(42deg)}
+
+  /* scene-scoped entrance animations (run when .is-on) */
+  .scene .fx{opacity:0}
+  .scene.is-on .fx{animation:rise .55s ease forwards}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .scene.is-on .d1{animation-delay:.1s}.scene.is-on .d2{animation-delay:.35s}
+  .scene.is-on .d3{animation-delay:.6s}.scene.is-on .d4{animation-delay:.9s}
+  .scene.is-on .d5{animation-delay:1.2s}.scene.is-on .d6{animation-delay:1.5s}
+  .scene.is-on .fx.pop{animation:pop .5s cubic-bezier(.2,.9,.3,1.4) forwards}
+  @keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+  .scene.is-on .fill-82 i{animation:fill82 2.4s ease forwards .3s}
+  @keyframes fill82{0%{width:0;background:var(--good)}60%{background:var(--warn)}100%{width:82%;background:var(--crit)}}
+  .scene.is-on .spin{animation:spin 14s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .orbit{position:absolute; inset:0; display:flex; align-items:center; justify-content:center}
+  .thread-line{position:absolute; height:2px; background:linear-gradient(90deg,transparent,var(--thread),transparent); transform-origin:left center}
+  .scene.is-on .thread-line{animation:sweep 2.2s ease forwards .5s; width:0}
+  @keyframes sweep{to{width:var(--w,180px)}}
+
+  /* cards / grids reused */
+  .cols-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:40px}
+  .cols-2{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:40px}
+  @media(max-width:860px){.cols-3{grid-template-columns:1fr} .cols-2{grid-template-columns:1fr}}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:22px; transition:border-color .2s, transform .2s; position:relative; overflow:hidden}
+  .card:hover{border-color:color-mix(in srgb,var(--accent) 45%, var(--line)); transform:translateY(-2px)}
+  .card .tag{font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent)}
+  .card h3{margin:10px 0 7px; font-size:1.05rem}
+  .card p{color:var(--muted); font-size:.92rem}
+  .card code{font-family:var(--mono); font-size:.8rem; background:var(--panel-2); border:1px solid var(--line-2); border-radius:6px; padding:2px 7px; color:var(--ink-soft); display:inline-block; margin-top:12px}
+  .new{font-family:var(--mono); font-size:.6rem; letter-spacing:.08em; color:#04211b; background:var(--accent); border-radius:4px; padding:2px 6px; vertical-align:middle; margin-left:8px; text-transform:uppercase}
+
+  /* problem split, now with a decaying-graph visual */
+  .split{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:38px}
+  @media(max-width:800px){.split{grid-template-columns:1fr}}
+  .box{border:1px solid var(--line); border-radius:var(--r); padding:24px; background:var(--panel)}
+  .box.bad{background:color-mix(in srgb,var(--crit) 6%, var(--panel))}
+  .box .lbl{font-family:var(--mono); font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; margin-bottom:14px}
+  .box.bad .lbl{color:var(--crit)} .box.good .lbl{color:var(--accent)}
+  .box ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px}
+  .box li{display:flex; gap:12px; font-size:.95rem; color:var(--ink-soft); align-items:flex-start}
+  .tik{flex:none; width:16px; height:16px; border-radius:5px; margin-top:2px}
+  .box.bad .tik{background:color-mix(in srgb,var(--crit) 22%, transparent); position:relative}
+  .box.bad .tik:after{content:"";position:absolute;inset:4px;border-top:1.5px solid var(--crit);transform:rotate(0)}
+  .box.good .tik{background:color-mix(in srgb,var(--accent) 20%, transparent); position:relative}
+  .box.good .tik:after{content:"";position:absolute;left:5px;top:2px;width:4px;height:8px;border-right:1.5px solid var(--accent);border-bottom:1.5px solid var(--accent);transform:rotate(42deg)}
+
+  /* flow */
+  .flow{margin-top:44px; border:1px solid var(--line); border-radius:16px; background:var(--panel); padding:32px 24px; overflow-x:auto}
+  .flow-grid{display:grid; grid-template-columns:1fr auto 1.2fr auto 1fr; gap:14px; align-items:center; min-width:740px}
+  .node{border:1px solid var(--line); border-radius:10px; padding:16px; background:var(--panel-2); text-align:center}
+  .node .ic{font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent)}
+  .node .ti{font-weight:600; margin-top:7px; font-size:.98rem}
+  .node .de{font-size:.82rem; color:var(--muted); margin-top:5px}
+  .node.stack{display:flex; flex-direction:column; gap:10px; background:transparent; border:none; padding:0}
+  .node.stack .sub{border:1px solid var(--line); border-radius:9px; padding:12px; background:var(--panel-2)}
+  .flowarrow{position:relative; height:2px; background:var(--line); min-width:40px}
+  .flowarrow:before{content:"";position:absolute;right:-1px;top:-3px;width:8px;height:8px;border-right:2px solid var(--accent);border-top:2px solid var(--accent);transform:rotate(45deg)}
+  .flowarrow .bead{position:absolute; top:-2px; left:0; width:6px; height:6px; border-radius:50%; background:var(--thread); animation:bead 2.2s linear infinite}
+  @keyframes bead{0%{left:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{left:100%;opacity:0}}
+
+  /* radar / category chart */
+  .radar-wrap{display:grid; grid-template-columns:1.05fr .95fr; gap:44px; align-items:center; margin-top:44px}
+  @media(max-width:880px){.radar-wrap{grid-template-columns:1fr; gap:30px}}
+  .radar-card{border:1px solid var(--line); border-radius:18px; background:var(--panel); padding:24px 26px 22px; box-shadow:var(--shadow)}
+  .radar{width:100%; height:auto; display:block; font-family:var(--mono); overflow:visible}
+  .radar .grid{fill:none; stroke:var(--line); stroke-width:1}
+  .radar .spoke{stroke:var(--line-2); stroke-width:1}
+  .radar .lbl{fill:var(--muted); font-size:13px}
+  .radar .poly{transform:scale(0); transform-box:view-box; transform-origin:200px 200px;
+    transition:transform 1.1s cubic-bezier(.2,.8,.2,1)}
+  .radar.draw .poly{transform:scale(1)}
+  .radar .poly.typ{fill:color-mix(in srgb,var(--faint) 34%, transparent); stroke:var(--faint); stroke-width:2; transition-delay:.15s}
+  .radar .poly.cont{fill:color-mix(in srgb,var(--accent) 20%, transparent); stroke:var(--accent); stroke-width:2.5; transition-delay:.5s}
+  .radar .vtx{fill:var(--accent); opacity:0; transition:opacity .5s ease 1s}
+  .radar.draw .vtx{opacity:1}
+  .legend{display:flex; flex-direction:column; gap:11px; margin-top:20px; padding-top:18px; border-top:1px solid var(--line-2); font-family:var(--mono); font-size:.8rem; color:var(--muted)}
+  .legend div{display:flex; align-items:flex-start; gap:9px}
+  .legend .sw{width:15px; height:15px; border-radius:5px; border:1.5px solid; flex:none}
+  .legend .sw.c{background:color-mix(in srgb,var(--accent) 22%,transparent); border-color:var(--accent)}
+  .legend .sw.t{background:color-mix(in srgb,var(--faint) 34%,transparent); border-color:var(--faint)}
+  .points{display:flex; flex-direction:column; gap:22px}
+  .pt{display:grid; grid-template-columns:32px 1fr; gap:14px}
+  .pt .num{font-family:var(--mono); color:var(--accent); font-weight:700; font-size:1rem; font-variant-numeric:tabular-nums}
+  .pt h4{margin:0 0 4px; font-size:.98rem}
+  .pt p{color:var(--muted); font-size:.92rem}
+
+  /* problem-section reasoning visual (decay vs preserved) */
+  .pviz{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center}
+  .pchip{font-family:var(--mono); font-size:.7rem; padding:5px 10px; border-radius:16px; border:1px solid var(--line); background:var(--panel-2)}
+  .box.bad .pchip{color:var(--crit); border-color:color-mix(in srgb,var(--crit) 34%,var(--line)); animation:decay 3.2s ease-in-out infinite}
+  .box.bad .pchip:nth-child(2){animation-delay:.5s} .box.bad .pchip:nth-child(3){animation-delay:1s}
+  @keyframes decay{0%,100%{opacity:1; filter:none} 55%{opacity:.16; filter:blur(1.2px)}}
+  .box.good .pchip{color:var(--accent); border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+  .box.good .pviz .savemark{width:15px;height:15px}
+
+  /* table */
+  .tblwrap{margin-top:40px; overflow-x:auto; border:1px solid var(--line); border-radius:var(--r)}
+  table{border-collapse:collapse; width:100%; min-width:720px; font-size:.92rem}
+  th,td{text-align:left; padding:13px 16px; border-bottom:1px solid var(--line-2)}
+  thead th{font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); background:var(--panel-2)}
+  tbody th{font-weight:600; color:var(--ink); font-size:.9rem}
+  td.c{text-align:center; font-family:var(--mono)}
+  .yes{color:var(--accent)} .no{color:var(--faint)} .mid{color:var(--warn)}
+  tbody tr:hover{background:color-mix(in srgb,var(--accent) 5%, transparent)}
+  tbody tr.us{background:color-mix(in srgb,var(--accent) 9%, transparent)}
+  tbody tr.us th{color:var(--accent)}
+
+  /* status */
+  .status{display:flex; flex-direction:column; gap:14px; margin-top:38px}
+  .srow{display:grid; grid-template-columns:220px 1fr auto; gap:18px; align-items:center}
+  @media(max-width:700px){.srow{grid-template-columns:1fr; gap:6px}}
+  .srow .name{font-weight:600; font-size:.95rem}
+  .srow .name span{display:block; font-size:.8rem; color:var(--muted); font-weight:400}
+  .bar{height:9px; border-radius:6px; background:var(--panel-2); overflow:hidden; border:1px solid var(--line-2)}
+  .bar i{display:block; height:100%; border-radius:6px; width:0; transition:width 1s ease}
+  .pill{font-family:var(--mono); font-size:.7rem; letter-spacing:.06em; padding:4px 9px; border-radius:20px; white-space:nowrap; text-transform:uppercase; font-weight:600}
+  .pill.hi{color:var(--good); background:color-mix(in srgb,var(--good) 15%,transparent)}
+  .pill.md{color:var(--warn); background:color-mix(in srgb,var(--warn) 15%,transparent)}
+  .pill.live{color:var(--accent); background:color-mix(in srgb,var(--accent) 15%,transparent)}
+
+  /* quickstart */
+  .tabs{display:flex; gap:8px; margin-top:38px; flex-wrap:wrap}
+  .tab{font-family:var(--mono); font-size:.85rem; padding:10px 16px; border-radius:9px; border:1px solid var(--line); background:var(--panel); color:var(--muted); cursor:pointer; transition:.18s}
+  .tab[aria-selected="true"]{color:var(--accent); border-color:color-mix(in srgb,var(--accent) 55%,var(--line)); background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
+  .panel[hidden]{display:none}
+  .steps{display:flex; flex-direction:column; margin-top:18px}
+  .step{display:grid; grid-template-columns:38px 1fr; gap:16px; padding:18px 0; border-bottom:1px solid var(--line-2)}
+  .step:last-child{border-bottom:none}
+  .step .n{font-family:var(--mono); color:var(--accent); font-size:.85rem; font-weight:600; padding-top:2px}
+  .step h4{margin:0 0 6px; font-size:.98rem}
+  .step p{color:var(--muted); font-size:.92rem}
+  .codeblock{font-family:var(--mono); font-size:.82rem; background:var(--panel-2); border:1px solid var(--line-2); border-radius:8px; padding:12px 14px; margin-top:10px; overflow-x:auto; white-space:pre; color:var(--ink-soft)}
+  .codeblock .p{color:var(--accent)} .codeblock .f{color:var(--brass)}
+
+  .final{text-align:center; border-bottom:none}
+  .final h2{font-size:clamp(1.9rem,4.4vw,3rem)}
+  .final p{margin:16px auto 0; max-width:48ch; color:var(--muted); font-size:1.06rem}
+  .final .hero-cta{justify-content:center; margin-top:30px}
+  footer{padding:38px 0 58px; color:var(--muted); font-size:.85rem}
+  .foot-in{display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; align-items:center}
+  .foot-links{display:flex; gap:20px; flex-wrap:wrap}
+  .foot-links a{color:var(--muted)} .foot-links a:hover{color:var(--accent)}
+
+  .reveal{opacity:0; transform:translateY(16px); transition:opacity .7s ease, transform .7s ease}
+  .reveal.in{opacity:1; transform:none}
+
+  /* ---- the plain idea strip ---- */
+  #idea{background:var(--panel-2)}
+  .idea-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:8px}
+  @media(max-width:820px){.idea-grid{grid-template-columns:1fr}}
+  .idea{position:relative; padding:26px 22px; border:1px solid var(--line); border-radius:14px; background:var(--panel)}
+  .idea .inum{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-weight:700;color:#04211b;background:var(--accent);font-size:1rem}
+  .idea h3{margin:16px 0 8px;font-size:1.14rem}
+  .idea p{color:var(--muted);font-size:.96rem}
+  .idea .ex{margin-top:14px;font-family:var(--mono);font-size:.76rem;color:var(--ink-soft);background:var(--panel-2);
+    border:1px solid var(--line-2);border-radius:8px;padding:9px 11px}
+  .idea .ex b{color:var(--accent);font-weight:600}
+  .idea-arrow{display:none}
+
+  /* ---- cinematic stage overrides ---- */
+  .stage{height:clamp(400px,55vw,470px); background:radial-gradient(120% 90% at 50% 0%, color-mix(in srgb,var(--accent) 6%, var(--panel)), var(--panel))}
+  .scene{transition:opacity .6s ease, transform .6s ease; transform:translateY(10px) scale(.994)}
+  .scene.is-on{transform:none}
+  .scene-cap{padding:22px 24px 24px; background:linear-gradient(0deg, color-mix(in srgb,var(--panel) 97%, transparent) 34%, transparent)}
+  .scene-cap .kh{font-family:var(--mono); font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:6px}
+  .scene-cap h3{font-size:1.22rem}
+  .scene-cap p{font-size:.96rem; max-width:64ch; margin-top:4px}
+
+  /* video-style timeline controls */
+  .timeline{display:flex; gap:6px; flex:1; margin:0 4px}
+  .seg{flex:1; height:6px; border-radius:6px; background:var(--line); border:none; padding:0; cursor:pointer; overflow:hidden; position:relative}
+  .seg i{position:absolute; left:0; top:0; height:100%; width:0; background:var(--accent); border-radius:6px}
+  .chapter{font-family:var(--mono); font-size:.76rem; color:var(--muted); min-width:160px; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  @media(max-width:640px){.chapter{display:none}}
+
+  /* radar polish */
+  .radar .poly.cont{fill:color-mix(in srgb,var(--accent) 13%, transparent); stroke:var(--accent); stroke-width:2.5; stroke-linejoin:round;
+    filter:drop-shadow(0 4px 16px color-mix(in srgb,var(--accent) 26%, transparent))}
+  .radar .poly.typ{fill:color-mix(in srgb,var(--brass) 11%, transparent); stroke:var(--brass); stroke-width:2; stroke-linejoin:round; stroke-dasharray:5 4}
+  .radar .lbl{fill:var(--muted); font-size:13px; letter-spacing:.02em}
+  .radar .tvx{fill:var(--brass); opacity:0; transition:opacity .5s ease .7s}
+  .radar.draw .tvx{opacity:.9}
+  .legend .sw.t{background:color-mix(in srgb,var(--brass) 11%,transparent); border-color:var(--brass)}
+  .legend .sw{margin-top:2px}
+  .lglabel{flex:1 1 auto; min-width:0; line-height:1.45}
+  .lgpct{flex:none; white-space:nowrap; margin-left:12px; font-family:var(--mono); font-size:.72rem; color:var(--ink-soft)}
+  .lgpct.dim{color:var(--muted)}
+
+  /* ---- pricing ---- */
+  #pricing{background:var(--panel-2)}
+  .price-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:46px}
+  @media(max-width:980px){.price-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.price-grid{grid-template-columns:1fr}}
+  .tier{display:flex; flex-direction:column; border:1px solid var(--line); border-radius:16px; background:var(--panel); padding:24px; position:relative}
+  .tier.hot{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), var(--shadow)}
+  .tier .badge{position:absolute; top:-11px; left:24px; font-family:var(--mono); font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; color:#04211b; background:var(--accent); padding:3px 9px; border-radius:5px}
+  .tier .tname{font-family:var(--mono); font-size:.76rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent)}
+  .tier .price{margin:12px 0 2px; font-size:2.1rem; font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+  .tier .price small{font-size:.88rem; color:var(--muted); font-weight:400; letter-spacing:0}
+  .tier .subline{color:var(--muted); font-size:.86rem; min-height:38px}
+  .tier ul{list-style:none; margin:16px 0 20px; padding:0; display:flex; flex-direction:column; gap:10px}
+  .tier li{display:flex; gap:9px; font-size:.9rem; color:var(--ink-soft)}
+  .tier li .ck{flex:none; width:15px;height:15px;border-radius:4px;background:color-mix(in srgb,var(--accent) 20%,transparent);position:relative;margin-top:2px}
+  .tier li .ck:after{content:"";position:absolute;left:5px;top:2px;width:4px;height:8px;border-right:1.5px solid var(--accent);border-bottom:1.5px solid var(--accent);transform:rotate(42deg)}
+  .tier .btn{margin-top:auto; justify-content:center; width:100%}
+  .tier .btn.ghost{color:var(--ink)}
+  .price-note{margin-top:24px; text-align:center; color:var(--muted); font-size:.9rem}
+
+  /* ---- every-AI problem grid ---- */
+  .ai-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:44px}
+  @media(max-width:900px){.ai-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:600px){.ai-grid{grid-template-columns:1fr}}
+  .ai-card{border:1px solid var(--line); border-radius:14px; background:var(--panel); padding:22px; display:flex; flex-direction:column; gap:12px; transition:border-color .2s, transform .2s}
+  .ai-card:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--line)); transform:translateY(-2px)}
+  .ai-top{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .ai-name{font-weight:700; font-size:1.06rem; letter-spacing:-.01em}
+  .ai-kind{font-family:var(--mono); font-size:.64rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); border:1px solid var(--line); border-radius:20px; padding:3px 9px; white-space:nowrap}
+  .ai-prob{font-size:.9rem; color:var(--ink-soft); padding-left:12px; border-left:2px solid color-mix(in srgb,var(--crit) 60%, var(--line))}
+  .ai-fix{font-size:.9rem; color:var(--ink-soft); padding-left:12px; border-left:2px solid var(--accent); margin-top:auto}
+  .ai-prob b{color:var(--crit); font-weight:600} .ai-fix b{color:var(--accent); font-weight:600}
+
+  /* ---- FAQ ---- */
+  .faq{max-width:760px; margin:40px auto 0; display:flex; flex-direction:column; gap:10px}
+  .faq details{border:1px solid var(--line); border-radius:12px; background:var(--panel); overflow:hidden}
+  .faq details[open]{border-color:color-mix(in srgb,var(--accent) 40%, var(--line))}
+  .faq summary{cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:17px 20px; font-weight:600; font-size:.97rem; transition:color .15s}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary:hover{color:var(--accent)}
+  .faq summary:after{content:""; width:8px; height:8px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted);
+    transform:rotate(45deg); transition:transform .25s; flex:none; margin-right:4px}
+  .faq details[open] summary:after{transform:rotate(-135deg); border-color:var(--accent)}
+  .faq .fa{padding:0 20px 18px; color:var(--muted); font-size:.93rem; max-width:64ch}
+
+  .assure{display:flex; justify-content:center; gap:28px; flex-wrap:wrap; margin-top:26px}
+  .assure span{display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:.76rem; color:var(--muted)}
+  .assure i{width:14px;height:14px;border-radius:4px;background:color-mix(in srgb,var(--accent) 20%,transparent);position:relative;flex:none}
+  .assure i:after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border-right:1.5px solid var(--accent);border-bottom:1.5px solid var(--accent);transform:rotate(42deg)}
+
+  /* ---- long-work timeline ---- */
+  .tw{position:relative; margin-top:44px; display:grid; grid-template-columns:repeat(4,1fr); gap:18px}
+  @media(max-width:820px){.tw{grid-template-columns:1fr; gap:0}}
+  .tw:before{content:""; position:absolute; left:8px; right:8px; top:15px; height:2px; background:var(--line)}
+  @media(max-width:820px){.tw:before{left:7px; right:auto; top:8px; bottom:20px; width:2px; height:auto}}
+  .tw-step{position:relative; padding-top:40px}
+  @media(max-width:820px){.tw-step{padding:0 0 26px 34px}}
+  .tw-dot{position:absolute; top:8px; left:0; width:16px; height:16px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 16%, transparent)}
+  .tw-when{font-family:var(--mono); font-size:.72rem; letter-spacing:.05em; text-transform:uppercase; color:var(--accent)}
+  .tw-what{margin-top:6px; font-size:.93rem; color:var(--ink-soft)}
+  .tw-what b{color:var(--ink); font-weight:600}
+
+
+  /* ---- idea: animated Save / Carry / Resume flow ---- */
+  .flow3{position:relative; margin-top:48px; display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:10px; align-items:start}
+  @media(max-width:840px){.flow3{grid-template-columns:1fr; gap:26px} .f3-track{display:none}}
+  .f3{display:flex; flex-direction:column; align-items:center; text-align:center; gap:13px}
+  .f3.st2{padding-top:22px}
+  .f3-win{width:100%; max-width:236px; border:1px solid var(--line); border-radius:12px; background:var(--panel); box-shadow:var(--shadow); overflow:hidden}
+  .f3-bar{display:flex; align-items:center; gap:5px; padding:8px 11px; border-bottom:1px solid var(--line-2); background:var(--panel-2)}
+  .f3-bar i{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+  .f3-bar i:nth-child(1){background:#ec6a5e}.f3-bar i:nth-child(2){background:#f4bf4f}.f3-bar i:nth-child(3){background:#61c554}
+  .f3-bar span{margin-left:5px;font-family:var(--mono);font-size:.66rem;color:var(--muted)}
+  .f3-body{padding:14px; display:flex; flex-direction:column; gap:8px; align-items:flex-start; min-height:82px}
+  .f3-chip{font-family:var(--mono); font-size:.72rem; padding:5px 10px; border-radius:16px; border:1px solid var(--line); background:var(--panel-2); opacity:0; animation:f3chip 6s ease-in-out infinite}
+  .f3-chip.dec{color:var(--accent); border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+  .f3-chip.rej{color:var(--crit); border-color:color-mix(in srgb,var(--crit) 40%,var(--line)); animation-delay:.4s}
+  @keyframes f3chip{0%,6%{opacity:0;transform:translateY(7px)}15%,60%{opacity:1;transform:none}70%,100%{opacity:0;transform:translateY(-5px)}}
+  .f3-line{font-family:var(--mono); font-size:.75rem; color:var(--ink-soft); opacity:0; animation:f3line 6s ease-in-out infinite}
+  .f3-line.acc{color:var(--accent)} .f3-line.two{animation-delay:.3s}
+  @keyframes f3line{0%,56%{opacity:0}66%,94%{opacity:1}100%{opacity:0}}
+  .f3-core{width:120px;height:120px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 40% 35%, color-mix(in srgb,var(--accent) 42%, var(--panel)), var(--panel-2));
+    border:1px solid color-mix(in srgb,var(--accent) 45%, var(--line)); animation:f3core 6s ease-in-out infinite}
+  @keyframes f3core{0%,22%{box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 7%, transparent)}42%{box-shadow:0 0 0 15px color-mix(in srgb,var(--accent) 18%, transparent)}66%,100%{box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 7%, transparent)}}
+  .f3-core span{font-family:var(--mono);font-size:.6rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+  .f3-core b{font-family:var(--mono);font-size:.82rem;color:var(--ink)}
+  .f3-cap{font-weight:600; font-size:.96rem; display:flex; align-items:center; gap:9px}
+  .f3-cap b{width:23px;height:23px;border-radius:7px;background:var(--accent);color:#04211b;font-family:var(--mono);font-size:.82rem;display:flex;align-items:center;justify-content:center;flex:none}
+  .f3-cmd{font-family:var(--mono); font-size:.72rem; color:var(--muted)}
+  .f3-track{position:relative; height:2px; background:var(--line); align-self:center; margin-top:52px; min-width:40px; border-radius:2px}
+  .f3-track .f3-pk{position:absolute; top:50%; left:0; width:9px;height:9px;margin-top:-4.5px;border-radius:50%; background:var(--thread); box-shadow:0 0 9px var(--thread); animation:f3pk 6s ease-in-out infinite}
+  .f3-track.t2 .f3-pk{animation-delay:3s}
+  @keyframes f3pk{0%,8%{left:0;opacity:0}16%{opacity:1}40%{left:100%;opacity:1}48%,100%{left:100%;opacity:0}}
+
+  /* ---- long work: animated week timeline ---- */
+  .wtl{position:relative; margin-top:48px}
+  .wtl-stops{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; position:relative; z-index:2}
+  .wtl-stop{display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px}
+  .wtl-dot{width:18px;height:18px;border-radius:50%;background:var(--panel-2);border:2px solid var(--line)}
+  .wtl-stop:nth-child(1) .wtl-dot{animation:dl1 7s ease-in-out infinite}
+  .wtl-stop:nth-child(2) .wtl-dot{animation:dl2 7s ease-in-out infinite}
+  .wtl-stop:nth-child(3) .wtl-dot{animation:dl3 7s ease-in-out infinite}
+  .wtl-stop:nth-child(4) .wtl-dot{animation:dl4 7s ease-in-out infinite}
+  @keyframes dl1{0%,4%{background:var(--panel-2);border-color:var(--line)}7%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 15%,transparent)}8%,100%{background:var(--accent);border-color:var(--accent)}}
+  @keyframes dl2{0%,26%{background:var(--panel-2);border-color:var(--line)}30%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 15%,transparent)}31%,100%{background:var(--accent);border-color:var(--accent)}}
+  @keyframes dl3{0%,49%{background:var(--panel-2);border-color:var(--line)}53%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 15%,transparent)}54%,100%{background:var(--accent);border-color:var(--accent)}}
+  @keyframes dl4{0%,72%{background:var(--panel-2);border-color:var(--line)}76%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 15%,transparent)}77%,100%{background:var(--accent);border-color:var(--accent)}}
+  .wtl-track{position:absolute; left:12.5%; right:12.5%; top:9px; height:3px; background:var(--line); border-radius:3px; z-index:1}
+  .wtl-fill{position:absolute; left:0; top:0; height:100%; width:0; background:var(--accent); border-radius:3px; animation:wtlfill 7s ease-in-out infinite}
+  @keyframes wtlfill{0%,4%{width:0}77%,100%{width:100%}}
+  .wtl-marker{position:absolute; top:50%; left:0; width:13px;height:13px;margin-top:-6.5px;margin-left:-6.5px;border-radius:50%;background:var(--thread);box-shadow:0 0 11px var(--thread); animation:wtlmark 7s ease-in-out infinite}
+  @keyframes wtlmark{0%,4%{left:0}77%,100%{left:100%}}
+  .wtl-wk{font-family:var(--mono); font-size:.7rem; letter-spacing:.05em; text-transform:uppercase; color:var(--accent)}
+  .wtl-pl{font-weight:600; font-size:.9rem}
+  .wtl-vb{font-family:var(--mono); font-size:.7rem; padding:3px 10px; border-radius:14px; background:color-mix(in srgb,var(--accent) 12%,transparent); color:var(--accent); border:1px solid color-mix(in srgb,var(--accent) 28%,transparent)}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important}
+    .reveal{opacity:1; transform:none}
+    #thread-canvas{display:none}
+    .scene{opacity:1; visibility:visible; position:relative; height:auto; border-bottom:1px solid var(--line-2); transform:none}
+    .stage{height:auto}
+    .scene .fx{opacity:1}
+    .seg i{width:100%}
+    .radar .poly{transform:scale(1) !important}
+    .radar .vtx{opacity:1}
+    .radar .tvx{opacity:.9}
+    .f3-chip,.f3-line{opacity:1 !important; transform:none !important}
+    .wtl-dot{background:var(--accent); border-color:var(--accent)}
+    .wtl-fill{width:100%} .wtl-marker{left:100%}
   }
-  .setrow { display: flex; align-items: center; gap: 12px; background: #141a3c; border: 1px solid #2b3268;
-    border-radius: 10px; padding: 12px 14px; font-family: var(--mono); font-size: .8rem; color: #d3d6f5; }
-  .setrow .ic { width: 26px; height: 26px; border-radius: 7px; background: radial-gradient(circle at 30% 30%, var(--accent), var(--accent-2)); flex: none; }
-  .setrow .ok { margin-left: auto; color: var(--good); font-size: .74rem; }
-  .setlabel { font-family: var(--mono); font-size: .74rem; color: #9497cc; }
-  .connect-btn { align-self: flex-start; font-family: var(--mono); font-size: .78rem; font-weight: 700;
-    background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 8px 16px; }
-  .msg { max-width: 82%; border-radius: 14px; padding: 11px 15px; font-size: .88rem; line-height: 1.5; }
-  .msg.user { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
-  .msg.ai { align-self: flex-start; background: #171d44; color: #dfe1fb; border: 1px solid #2a3168; border-bottom-left-radius: 4px; }
-  .toolchip { align-self: flex-start; font-family: var(--mono); font-size: .72rem; color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 12%, #141a3c); border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
-    border-radius: 999px; padding: 5px 12px; display: inline-flex; gap: 7px; align-items: center; }
-  .toolchip .spin { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-  .msg.ai .rkey { color: var(--accent); } .msg.ai .rej { color: var(--crit); }
-
-  /* integrations */
-  .int-grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
-  @media (min-width: 720px) { .int-grid { grid-template-columns: repeat(2, 1fr); } }
-  .int { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); padding: 22px; display: flex; flex-direction: column; gap: 12px; }
-  .int h3 { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-  .int .badge { font-family: var(--mono); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
-    border: 1px solid var(--border); border-radius: 999px; padding: 3px 8px; }
-  .int p { color: var(--muted); font-size: .9rem; }
-  .int pre { margin: 0; font-family: var(--mono); font-size: .78rem; color: var(--accent); background: var(--surface-2);
-    border: 1px solid var(--border-soft); border-radius: 8px; padding: 12px; overflow-x: auto; }
-
-  /* pricing */
-  .price-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-  @media (min-width: 720px) { .price-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 1040px) { .price-grid { grid-template-columns: repeat(4, 1fr); } }
-  .tier { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); padding: 26px 22px; display: flex; flex-direction: column; gap: 16px; }
-  .tier.pop { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 24px 60px -42px var(--glow); position: relative; }
-  .tier.pop::before { content: "Most popular"; position: absolute; top: -11px; left: 22px; font-family: var(--mono);
-    font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; background: var(--accent); color: var(--accent-ink); padding: 3px 9px; border-radius: 999px; }
-  .tier .tname { font-family: var(--mono); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-  .tier .price { font-size: 2.2rem; font-weight: 800; letter-spacing: -.03em; }
-  .tier .price small { font-size: .82rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
-  .tier .who { color: var(--muted); font-size: .88rem; min-height: 2.4em; }
-  .tier ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; font-size: .88rem; }
-  .tier li { display: flex; gap: 9px; align-items: flex-start; color: var(--text); }
-  .tier li::before { content: "+"; color: var(--accent); font-family: var(--mono); font-weight: 700; flex: none; }
-  .tier .btn { justify-content: center; margin-top: auto; }
-
-  .final { border: 1px solid var(--border); border-radius: 20px;
-    background: radial-gradient(120% 140% at 100% 0%, var(--glow), transparent 55%), var(--surface);
-    padding: clamp(36px, 5vw, 64px); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-  .final h2 { font-size: clamp(1.8rem, 1.3rem + 2vw, 3rem); font-weight: 800; max-width: 18ch; }
-  .final .lead { text-align: center; margin: 0 auto; }
-  footer { border-top: 1px solid var(--border-soft); padding: 40px 0; color: var(--muted); }
-  .foot-in { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: .8rem; }
-  footer a { color: var(--muted); text-decoration: none; }
-  footer a:hover { color: var(--accent); }
-  /* spacing + overflow safeguards */
-  pre, code { overflow-wrap: anywhere; }
-  .feat p, .pillar p, .rpoint p, .int p, .flow-step p, .lead { overflow-wrap: break-word; }
-  .strhead { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px; }
-  .rpoint .k { min-width: 22px; }
-  @media (max-width: 560px) {
-    section { padding: 54px 0; }
-    .head { margin-bottom: 32px; }
-    .hero h1 { font-size: clamp(2rem, 8vw, 2.6rem); }
-    .strength-num { font-size: 2.8rem; }
-  }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 </style>
 
-<div class="announce">
-  <div class="in">
-    <span class="pill">LIVE</span>
-    <span>The memory layer for your AI's <b>reasoning</b>, running now as an MCP connector.</span>
-    <a href="#claude">Add to Claude in 60 seconds</a>
-  </div>
-</div>
-
-<header class="nav">
+<nav>
   <div class="wrap nav-in">
-    <div class="brand"><span class="mark" aria-hidden="true"></span> Continuum</div>
-    <nav class="nav-links">
-      <a href="#what">What it is</a>
-      <a href="#compare">Why unique</a>
-      <a href="#how">How it works</a>
-      <a href="#claude">Add to Claude</a>
-      <a href="#start">Get started</a>
+    <a class="brand" href="#top"><span class="dot"></span>continuum</a>
+    <div class="nav-links">
+      <a href="#everyai">Problem</a>
+      <a href="#journey">Walkthrough</a>
+      <a href="#features">Features</a>
+      <a href="#compare">Why us</a>
       <a href="#pricing">Pricing</a>
-    </nav>
-    <div class="nav-cta">
-      <button class="theme-toggle" id="themeBtn" aria-label="Toggle color theme">&#9680;</button>
-      <a class="btn btn-primary" href="#claude">Add to Claude</a>
+      <a class="btn btn-sm" href="#pricing">Start free</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <canvas id="thread-canvas" aria-hidden="true"></canvas>
+  <div class="wrap hero-in">
+    <div class="hero-grid">
+      <div>
+        <div class="live" style="margin-bottom:18px"><span class="pulse"></span>LIVE REMOTE MCP</div>
+        <h1>Your AI forgets <span class="g">why.</span><br>Continuum remembers.</h1>
+        <p class="lede">The decisions, the trade offs, the why. Continuum carries your reasoning across every AI, so no chat ever starts from zero.</p>
+        <div class="hero-cta">
+          <a class="btn" href="#pricing">Start free <span class="chev"></span></a>
+          <a class="btn ghost" href="#journey">Watch it work</a>
+        </div>
+        <div class="urlbar">
+          <button class="urlpill" id="copyUrl" title="Copy MCP URL"><span class="k">mcp</span> https://rahultwte-continuum-mcp.hf.space/mcp</button>
+          <span class="copy-hint" id="copyHint">click to copy</span>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><b class="tnum">21</b><span>MCP tools</span></div>
+          <div class="stat"><b class="tnum">3</b><span>surfaces</span></div>
+          <div class="stat"><b class="tnum">38</b><span>tests passing</span></div>
+        </div>
+      </div>
+      <div class="term" role="img" aria-label="Terminal demo of continuum checkpoint, resume and recall">
+        <div class="term-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="t mono">continuum</span></div>
+        <div class="term-body" id="term"></div>
+      </div>
     </div>
   </div>
 </header>
 
 <main>
-  <!-- HERO -->
-  <section class="hero">
-    <span class="aurora" aria-hidden="true"></span>
+  <!-- ============ THE PLAIN IDEA ============ -->
+  <section id="idea">
     <div class="wrap">
-      <p class="eyebrow">The reasoning memory for AI</p>
-      <h1 style="margin-top:16px">Your AI forgets <span class="hl">how it was thinking.</span> Continuum remembers.</h1>
-      <p class="lead">Every model hits a context limit, ends a session, or gets swapped for another, and the reasoning is destroyed: the decisions, the alternatives you rejected, the open questions. Continuum captures that thinking state in flight and rebuilds it in any chat, any session, any provider.</p>
-      <div class="hero-cta" style="margin-top:28px">
-        <a class="btn btn-primary" href="#claude">Add to Claude in 60 seconds</a>
-        <a class="btn btn-ghost" href="#how">See how it works</a>
+      <div class="sec-head reveal">
+        <div class="eyebrow">The idea in ten seconds</div>
+        <h2>Save the thinking. Switch models. Continue like you never left.</h2>
+        <p>Watch one decision leave a chat, live inside Continuum, and come back in a different AI. This is the whole product, on a loop.</p>
       </div>
-      <div class="provider-strip">
-        <span class="lab">Works across</span>
-        <b>Claude</b><b>ChatGPT</b><b>Grok</b><b>Codex</b><b>Cursor</b><b>Gemini</b>
-        <span class="bar"></span><span>Local first, open core, provider neutral</span>
-      </div>
-
-      <div class="signal-panel">
-        <div class="panel-head">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="path">reasoning signal, session one, context cliff, session two</span>
-          <span class="tag">continuity live</span>
-        </div>
-        <canvas id="signal" width="1120" height="260" aria-label="A conversation's reasoning signal is cut off at the context limit. Continuum bridges the gap and continues the line unbroken into the next session."></canvas>
-      </div>
-    </div>
-  </section>
-
-  <!-- WHAT IT IS + ARCHITECTURE -->
-  <section id="what">
-    <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">What it is</p>
-        <h2 class="define">A <span class="hl">save state</span> for your AI's reasoning that works in <span class="hl">any</span> tool.</h2>
-        <p class="lead">Continuum reads a conversation from any AI, keeps the verbatim text, the reasoning (decisions, rejected alternatives, open questions) and, on Cognee, a knowledge graph, then rebuilds that state anywhere. One neutral hub between every tool you use.</p>
-      </div>
-      <div class="arch-wrap">
-        <svg class="arch" viewBox="0 0 960 380" role="img"
-             aria-label="Grok, Claude Code and Codex sessions flow into the Continuum hub of verbatim, reasoning graph and knowledge graph, which rebuilds state to any AI: Claude web, ChatGPT, Cursor.">
-          <g>
-            <rect class="node" x="24" y="44"  width="168" height="54" rx="10"></rect>
-            <text class="node-lbl" x="108" y="76" text-anchor="middle">Grok</text>
-            <rect class="node" x="24" y="153" width="168" height="54" rx="10"></rect>
-            <text class="node-lbl" x="108" y="185" text-anchor="middle">Claude Code</text>
-            <rect class="node" x="24" y="262" width="168" height="54" rx="10"></rect>
-            <text class="node-lbl" x="108" y="294" text-anchor="middle">Codex</text>
-          </g>
-          <path class="conn" d="M192 71  C300 71,300 130,396 130"></path>
-          <path class="conn" d="M192 180 C300 180,300 190,396 190"></path>
-          <path class="conn" d="M192 289 C300 289,300 250,396 250"></path>
-          <rect class="glow" x="380" y="60" width="200" height="260" rx="18"></rect>
-          <rect class="hub" x="396" y="72" width="168" height="236" rx="14"></rect>
-          <text class="hub-title" x="480" y="100" text-anchor="middle">CONTINUUM</text>
-          <g>
-            <rect class="layer" x="416" y="118" width="128" height="40" rx="8"></rect>
-            <text class="layer-lbl" x="480" y="143" text-anchor="middle">verbatim</text>
-            <rect class="layer" x="416" y="166" width="128" height="40" rx="8"></rect>
-            <text class="layer-lbl" x="480" y="191" text-anchor="middle">reasoning graph</text>
-            <rect class="layer" x="416" y="214" width="128" height="40" rx="8"></rect>
-            <text class="layer-lbl" x="480" y="239" text-anchor="middle">knowledge graph</text>
-          </g>
-          <text class="cap" x="480" y="286" text-anchor="middle">capture, normalize, resume</text>
-          <path class="conn rev" d="M564 130 C660 130,660 71,768 71"></path>
-          <path class="conn rev" d="M564 190 C660 190,660 180,768 180"></path>
-          <path class="conn rev" d="M564 250 C660 250,660 289,768 289"></path>
-          <g>
-            <rect class="node" x="768" y="44"  width="168" height="54" rx="10"></rect>
-            <text class="node-lbl" x="852" y="76" text-anchor="middle">Claude web</text>
-            <rect class="node" x="768" y="153" width="168" height="54" rx="10"></rect>
-            <text class="node-lbl" x="852" y="185" text-anchor="middle">ChatGPT</text>
-            <rect class="node" x="768" y="262" width="168" height="54" rx="10"></rect>
-            <text class="node-lbl" x="852" y="294" text-anchor="middle">Cursor</text>
-          </g>
-          <text class="cap" x="108" y="30" text-anchor="middle">CAPTURE, native sessions</text>
-          <text class="cap" x="852" y="30" text-anchor="middle">RESUME, paste or MCP</text>
-        </svg>
-      </div>
-    </div>
-  </section>
-
-  <!-- COMPARISON RADAR -->
-  <section id="compare" style="background:var(--surface-2); border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft);">
-    <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">The category we created</p>
-        <h2>Everyone stores <em>facts.</em> Only Continuum stores the <em>reasoning.</em></h2>
-        <p class="lead">Memory systems cover a thin slice: they recall knowledge. Continuum covers the whole surface, because it saves the working state of a decision and carries it to another AI.</p>
-      </div>
-      <div class="radar-wrap">
-        <div class="radar-card">
-          <svg class="radar" id="radar" viewBox="0 0 500 452" role="img"
-               aria-label="Capability coverage radar. Continuum covers reasoning-state, rejected alternatives, resume package, cross-tool capture and context meter fully, plus knowledge graph partially. A typical memory layer covers only knowledge graph."></svg>
-          <div class="rlegend">
-            <span><span class="sw us"></span> Continuum</span>
-            <span><span class="sw ot"></span> Typical memory layer (Cognee, Mem0, Letta, Supermemory)</span>
+      <div class="flow3 reveal">
+        <div class="f3 st1">
+          <div class="f3-win">
+            <div class="f3-bar"><i></i><i></i><i></i><span>claude</span></div>
+            <div class="f3-body">
+              <span class="f3-chip dec">decision: JWT</span>
+              <span class="f3-chip rej">rejected: Redis</span>
+            </div>
           </div>
+          <div class="f3-cap"><b>1</b> Save the reasoning</div>
+          <div class="f3-cmd">save this to continuum</div>
         </div>
-        <div class="rpoints">
-          <div class="rpoint"><span class="k">01</span><p><b>Reasoning state.</b> The decision and its reason, the alternative and why it was rejected. No memory layer reconstructs this.</p></div>
-          <div class="rpoint"><span class="k">02</span><p><b>Resume package.</b> A compact, paste ready state that continues the work in any provider.</p></div>
-          <div class="rpoint"><span class="k">03</span><p><b>Cross tool capture.</b> Reads Grok, Claude Code and Codex session files directly, so switching tools loses nothing.</p></div>
-          <div class="rpoint"><span class="k">04</span><p><b>Knowledge graph.</b> On Cognee Cloud you get the full graph too, so Continuum is a layer above Cognee, not a competitor.</p></div>
-          <p class="rnote">Honest read: on knowledge graph alone the field is strong. On everything that makes reasoning portable, the field is empty.</p>
+        <div class="f3-track t1"><span class="f3-pk"></span></div>
+        <div class="f3 st2">
+          <div class="f3-core"><span>continuum</span><b>memory</b></div>
+          <div class="f3-cap"><b>2</b> Carried across</div>
+          <div class="f3-cmd">any AI, any month</div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- UNIQUE PILLARS -->
-  <section id="unique">
-    <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">Where it is strong and unique</p>
-        <h2>Four things nothing else does together.</h2>
-        <p class="lead">Others do one of these. Continuum does all four in one product, which is what makes cross tool continuity actually work.</p>
-      </div>
-      <div class="pillars">
-        <div class="pillar">
-          <div class="picon"><svg viewBox="0 0 40 40" aria-hidden="true"><line class="pi-stroke" x1="10" y1="20" x2="30" y2="20"></line><circle class="pi-stroke" cx="10" cy="20" r="4"></circle><circle class="pi-fill pi-pulse" cx="30" cy="20" r="5"></circle></svg></div>
-          <span class="pn">01, the moat</span>
-          <h3>Reasoning, not just facts</h3>
-          <p>It saves the decision and its reason, the alternative and why you rejected it, the open questions. Memory layers store knowledge; none reconstruct a working decision for another AI.</p>
-          <span class="proof">Verified: resume refuses to re propose a rejected option</span>
-        </div>
-        <div class="pillar">
-          <div class="picon"><svg viewBox="0 0 40 40" aria-hidden="true"><g class="pi-rise"><rect class="pi-stroke" x="10" y="22" width="20" height="5" rx="1.5"></rect><rect class="pi-stroke pi-sec" x="12" y="15" width="16" height="5" rx="1.5"></rect><rect class="pi-fill" x="14" y="8" width="12" height="5" rx="1.5"></rect></g></svg></div>
-          <span class="pn">02, superset</span>
-          <h3>Everything Cognee does, plus reasoning</h3>
-          <p>On Cognee Cloud, one checkpoint runs ingest, knowledge graph and embeddings, and extracts reasoning. Resume even includes a knowledge graph answer. A layer above Cognee, not against it.</p>
-          <span class="proof">Verified live against a Cognee tenant</span>
-        </div>
-        <div class="pillar">
-          <div class="picon"><svg viewBox="0 0 40 40" aria-hidden="true"><path class="pi-stroke pi-dash" d="M8 12 H22 M8 20 H26 M8 28 H22"></path><circle class="pi-fill pi-pulse" cx="30" cy="20" r="4"></circle></svg></div>
-          <span class="pn">03, neutral hub</span>
-          <h3>Reads every tool's native sessions</h3>
-          <p>Point it at Grok, Claude Code or Codex session files and it captures them directly, with no copy and paste, then resumes anywhere. Grok can export a transcript; it cannot move reasoning across providers. This can.</p>
-          <span class="proof">Verified: parsed real Grok, Claude and Codex sessions</span>
-        </div>
-        <div class="pillar">
-          <div class="picon"><svg viewBox="0 0 40 40" aria-hidden="true"><rect class="pi-stroke" x="8" y="16" width="24" height="8" rx="3"></rect><rect class="pi-fill" x="10" y="18" width="9" height="4" rx="2"><animate attributeName="width" values="4;16;4" dur="2.6s" repeatCount="indefinite"></animate></rect></svg></div>
-          <span class="pn">04, bounded</span>
-          <h3>Moves state, not a huge token dump</h3>
-          <p>The context meter tells you when to save; salience pruning keeps the resume package small. You paste a few kilobytes of state, so the target model's window stays free for new work.</p>
-          <span class="proof">Real scoring runs in the live gauge below</span>
+        <div class="f3-track t2"><span class="f3-pk"></span></div>
+        <div class="f3 st3">
+          <div class="f3-win">
+            <div class="f3-bar"><i></i><i></i><i></i><span>grok</span></div>
+            <div class="f3-body">
+              <span class="f3-line acc">RESUME project auth</span>
+              <span class="f3-line two">JWT, rejected Redis</span>
+            </div>
+          </div>
+          <div class="f3-cap"><b>3</b> Resume, intact</div>
+          <div class="f3-cmd">resume continuum</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- HOW IT WORKS -->
-  <section id="how" style="background:var(--surface-2); border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft);">
+  <!-- ============ EVERY AI BLIND SPOT ============ -->
+  <section id="everyai">
     <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">How it works</p>
+      <div class="sec-head reveal">
+        <div class="eyebrow">The blind spot in every AI</div>
+        <h2>Every model remembers something. None of them remember your reasoning.</h2>
+        <p>Each tool ships its own kind of memory, and every one of them drops the part that actually matters the moment a chat ends or you change tools. Here is what breaks, tool by tool, and what Continuum does about it.</p>
+      </div>
+      <div class="ai-grid">
+        <div class="ai-card reveal">
+          <div class="ai-top"><span class="ai-name">Claude</span><span class="ai-kind">auto summary</span></div>
+          <div class="ai-prob"><b>The gap.</b> When the window fills, Claude compresses your chat into a summary you never see and cannot steer. It stays locked inside Claude.</div>
+          <div class="ai-fix"><b>With Continuum.</b> You choose what gets saved, you can read every word of it, and it follows you to any other AI.</div>
+        </div>
+        <div class="ai-card reveal">
+          <div class="ai-top"><span class="ai-name">ChatGPT</span><span class="ai-kind">memory</span></div>
+          <div class="ai-prob"><b>The gap.</b> Memory stores facts about you, not the state of your work. It knows your name and forgets your architecture.</div>
+          <div class="ai-fix"><b>With Continuum.</b> The working state of every decision is captured and resumes anywhere, not just inside one product.</div>
+        </div>
+        <div class="ai-card reveal">
+          <div class="ai-top"><span class="ai-name">Grok</span><span class="ai-kind">chat export</span></div>
+          <div class="ai-prob"><b>The gap.</b> Export hands you a one way wall of text. No decisions, no rejected options, and no way to import it back and continue.</div>
+          <div class="ai-fix"><b>With Continuum.</b> A structured, two way resume package that picks the work back up in Grok or anywhere else.</div>
+        </div>
+        <div class="ai-card reveal">
+          <div class="ai-top"><span class="ai-name">Codex, Claude Code</span><span class="ai-kind">session file</span></div>
+          <div class="ai-prob"><b>The gap.</b> Sessions sit on disk, but every new one starts cold, and nothing carries the reasoning to another tool.</div>
+          <div class="ai-fix"><b>With Continuum.</b> It reads the session file itself, extracts the reasoning, and autosave keeps every single turn.</div>
+        </div>
+        <div class="ai-card reveal">
+          <div class="ai-top"><span class="ai-name">Gemini</span><span class="ai-kind">chat only</span></div>
+          <div class="ai-prob"><b>The gap.</b> Context lives and dies with the conversation. A decision made here cannot travel to another provider.</div>
+          <div class="ai-fix"><b>With Continuum.</b> A paste ready resume that works everywhere, plus a hosted connector where the platform supports one.</div>
+        </div>
+        <div class="ai-card reveal">
+          <div class="ai-top"><span class="ai-name">All of them</span><span class="ai-kind">across months</span></div>
+          <div class="ai-prob"><b>The gap.</b> Not one of them can hand back your work on a subject from six weeks ago, or the reason you ruled an option out.</div>
+          <div class="ai-fix"><b>With Continuum.</b> Recall gathers every checkpoint on a subject across months of history, with the why intact.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE JOURNEY ============ -->
+  <section id="journey">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">Watch it work</div>
+        <h2>One decision, followed for eight weeks.</h2>
+        <p>Watch a real decision travel from the chat where you made it, through a full context window, into Continuum, and back out in a different AI weeks later. It plays on its own.</p>
+      </div>
+
+      <div class="stage-wrap reveal">
+        <div class="stage" id="stage">
+
+          <!-- Scene 1: reason with Claude -->
+          <div class="scene" data-title="It starts in a chat" data-cap="An ordinary conversation. You choose JWT over sessions, and right now the why exists in exactly one place: this window.">
+            <div class="glass win fx pop d1">
+              <div class="wb"><i style="background:#ec6a5e"></i><i style="background:#f4bf4f"></i><i style="background:#61c554"></i><span class="lab">claude</span></div>
+              <div class="wc">
+                <div class="bub u fx d2">Should we use JWT or sessions for auth?</div>
+                <div class="bub a fx d3">JWT. Stateless, low ops. Redis sessions add a lock race.</div>
+                <div class="rgraph">
+                  <span class="rnode dec fx pop d4">decision: JWT</span>
+                  <span class="rnode rej fx pop d5">rejected: Redis</span>
+                  <span class="rnode op fx pop d6">open: refresh</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 2: window fills -->
+          <div class="scene" data-title="The window fills" data-cap="The chat grows, and the model starts compressing without asking. Autopilot calls it at the moment before loss, not after.">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:20px;width:100%">
+              <div class="mono fx d1" style="font-size:.78rem;color:var(--muted);letter-spacing:.1em">CONTEXT WINDOW</div>
+              <div class="ctxbar fill-82 fx d1"><i></i></div>
+              <div class="chip warn fx d4">autopilot: switch now, window at 82 percent</div>
+            </div>
+          </div>
+
+          <!-- Scene 3: checkpoint -->
+          <div class="scene" data-title="Checkpoint makes it durable" data-cap="One save turns talk into state: the exact words, the reasoning graph, and a knowledge graph. The thinking now outlives the chat.">
+            <div style="display:flex;align-items:center;gap:26px;flex-wrap:wrap;justify-content:center">
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <span class="rnode dec fx d1">decision: JWT</span>
+                <span class="rnode rej fx d2">rejected: Redis</span>
+                <span class="rnode op fx d3">open: refresh</span>
+              </div>
+              <div class="flowarrow fx d3" style="width:70px"><span class="bead"></span></div>
+              <div class="core fx pop d4"><span>continuum</span><b>saved</b></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <span class="rnode fx d5">verbatim</span>
+                <span class="rnode fx d5">reasoning graph</span>
+                <span class="rnode fx d6">knowledge graph</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 4: resume anywhere -->
+          <div class="scene" data-title="Resume in a different AI" data-cap="A clean tab in Grok. Resume rebuilds the decision, the rejected option, and the open question. The new model continues instead of restarting.">
+            <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;justify-content:center">
+              <div class="core fx pop d1"><span>continuum</span><b>memory</b></div>
+              <div class="thread-line fx" style="--w:150px;position:relative;top:0"></div>
+              <div class="glass win fx d3" style="width:min(300px,74vw)">
+                <div class="wb"><i style="background:#ec6a5e"></i><i style="background:#f4bf4f"></i><i style="background:#61c554"></i><span class="lab">grok</span></div>
+                <div class="wc" style="font-family:var(--mono);font-size:.8rem;line-height:1.7">
+                  <div class="fx d4" style="color:var(--accent)">RESUME project auth</div>
+                  <div class="fx d5" style="color:var(--ink-soft)">decided JWT, stateless</div>
+                  <div class="fx d5" style="color:var(--ink-soft)">rejected Redis, lock race</div>
+                  <div class="fx d6" style="color:var(--brass)">open: refresh endpoint</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 5: recall across months -->
+          <div class="scene" data-title="Recall across months" data-cap="Weeks later, buried under other work, you ask for one subject. Recall finds every checkpoint about it and merges them into a single package.">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:22px;width:100%">
+              <div class="chip ok fx d1 mono">recall project x, dna mutation</div>
+              <div class="rail fx d2">
+                <div class="tick"><b></b></div>
+                <div class="tick hit"><b></b></div>
+                <div class="tick"><b></b></div>
+                <div class="tick"><b></b></div>
+                <div class="tick hit"><b></b></div>
+                <div class="tick"><b></b></div>
+              </div>
+              <div class="mono fx d5" style="font-size:.8rem;color:var(--muted)">2 of 6 checkpoints match the subject, merged into one package</div>
+            </div>
+          </div>
+
+          <!-- Scene 6: autosave -->
+          <div class="scene" data-title="Autosave, every turn" data-cap="In Claude Code, a hook saves after every single turn on its own. Forgetting to save is no longer a thing that can happen.">
+            <div class="glass win fx d1" style="width:min(360px,84vw)">
+              <div class="wb"><i style="background:#ec6a5e"></i><i style="background:#f4bf4f"></i><i style="background:#61c554"></i><span class="lab">claude code, Stop hook</span></div>
+              <div class="wc">
+                <div class="turnrow fx d2"><span class="savemark"></span> turn 1  captured</div>
+                <div class="turnrow fx d3"><span class="savemark"></span> turn 2  captured</div>
+                <div class="turnrow fx d4"><span class="savemark"></span> turn 3  captured</div>
+                <div class="turnrow fx d5"><span class="savemark"></span> turn 4  captured</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 7: one memory every platform -->
+          <div class="scene" data-title="One memory, every model" data-cap="Claude, Grok, ChatGPT, Codex, Gemini. The providers become interchangeable. The reasoning is yours, and it travels.">
+            <div style="position:relative;width:300px;height:260px">
+              <div class="orbit"><div class="core fx pop d1"><span>continuum</span><b>one memory</b></div></div>
+              <div class="plat fx d2" style="position:absolute;top:0;left:50%;transform:translateX(-50%)">Claude</div>
+              <div class="plat fx d3" style="position:absolute;top:32%;right:0">Grok</div>
+              <div class="plat fx d4" style="position:absolute;bottom:0;right:14%">ChatGPT</div>
+              <div class="plat fx d5" style="position:absolute;bottom:0;left:14%">Codex</div>
+              <div class="plat fx d6" style="position:absolute;top:32%;left:0">Gemini</div>
+            </div>
+          </div>
+
+          <div class="scene-cap"><div class="kh" id="capKh">Chapter one</div><h3 id="capTitle">It starts in a chat</h3><p id="capText">An ordinary conversation, and the why exists in exactly one place.</p></div>
+        </div>
+
+        <div class="stage-controls">
+          <button class="ctrl" id="play" aria-label="Pause"><span class="ico-pause"><i></i><i></i></span></button>
+          <button class="ctrl" id="prev" aria-label="Previous"><span class="ico-prev"></span></button>
+          <button class="ctrl" id="next" aria-label="Next"><span class="ico-next"></span></button>
+          <div class="timeline" id="timeline" role="tablist"></div>
+          <span class="chapter" id="chapter">It starts in a chat</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">Why this matters</div>
+        <h2>Facts are cheap to recall. Reasoning is what dies.</h2>
+        <p>A fact you lose can be looked up again. The reasoning behind a decision cannot. Once it is gone, you pay for it twice: once to rebuild it, and once in the mistakes you repeat.</p>
+      </div>
+      <div class="split">
+        <div class="box bad reveal">
+          <div class="lbl">Without continuum</div>
+          <div class="pviz"><span class="pchip">decision</span><span class="pchip">rejected</span><span class="pchip">why</span><span class="mono" style="font-size:.72rem;color:var(--crit)">fading</span></div>
+          <ul>
+            <li><span class="tik"></span>The window fills, and the model silently discards the thinking that got you here.</li>
+            <li><span class="tik"></span>You switch tools, paste a wall of transcript, and spend an hour re-explaining trade offs.</li>
+            <li><span class="tik"></span>You return a month later. The decision survived. The reason for it did not.</li>
+          </ul>
+        </div>
+        <div class="box good reveal">
+          <div class="lbl">With continuum</div>
+          <div class="pviz"><span class="pchip">decision</span><span class="pchip">rejected</span><span class="pchip">why</span><span class="savemark"></span><span class="mono" style="font-size:.72rem;color:var(--accent)">saved</span></div>
+          <ul>
+            <li><span class="tik"></span>Every decision is saved with its why and the options you already ruled out.</li>
+            <li><span class="tik"></span>Any AI resumes the exact reasoning, in one sentence, with nothing lost.</li>
+            <li><span class="tik"></span>Any subject comes back from months of history, not just the latest save.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW -->
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">Under the hood</div>
         <h2>Capture in flight. Rebuild anywhere.</h2>
-        <p class="lead">One command captures the thinking; one command rebuilds it. Everything in between is Continuum's job.</p>
+        <p>One checkpoint writes three layers at once. One resume reads them back as a compact package that fits any context window.</p>
       </div>
-      <div class="flow three">
-        <div class="flow-step">
-          <span class="idx">CHECKPOINT</span>
-          <h3>Save the thinking state</h3>
-          <p>Continuum stores the conversation verbatim as the source of truth and extracts a reasoning graph: goals, decisions, rejected options, hypotheses, open questions, each timestamped.</p>
-          <code>continuum checkpoint -p billing &lt; chat.txt</code>
-        </div>
-        <div class="flow-step">
-          <span class="idx">HOLD</span>
-          <h3>Graph and verbatim, bounded</h3>
-          <p>The reasoning graph is the index; verbatim is the fidelity. Salience based forgetting keeps it lean, so what comes back is compact, never a second context blowout.</p>
-          <code>continuum improve -p billing</code>
-        </div>
-        <div class="flow-step">
-          <span class="idx">RESUME</span>
-          <h3>Rebuild in any AI</h3>
-          <p>Get a paste ready resume package: the state, the rejected alternatives so it will not re propose them, and the exact words that matter, dropped into any provider.</p>
-          <code>continuum resume -p billing | pbcopy</code>
-        </div>
-      </div>
-
-      <div class="term" style="margin-top:34px" aria-hidden="true">
-        <div class="panel-head" style="border-bottom:1px solid #262c58">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="path" style="color:#9497cc">project, continuum</span>
-          <span class="tag">live demo</span>
-        </div>
-        <div class="term-body" id="termBody"></div>
-      </div>
-      <p class="kicker" style="margin-top:12px; text-transform:none; letter-spacing:.02em; color:var(--muted)">
-        A full switch, start to finish: capture a Grok chat, check safety, resume in Claude, move to ChatGPT.
-      </p>
-    </div>
-  </section>
-
-  <!-- CONTEXT HEALTH -->
-  <section id="health">
-    <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">Live context health meter</p>
-        <h2>Know your reasoning is safe before the model quietly drops it.</h2>
-        <p class="lead">Continuum gauges how full the context window is and how much fresh thinking has not been saved yet, then scores the strength of your state and tells you when to checkpoint. Drag the slider; this runs Continuum's real scoring.</p>
-      </div>
-      <div class="gauge-wrap">
-        <div class="gauge-panel" aria-live="polite">
-          <div class="strhead">
-            <div>
-              <div class="kicker">Reasoning strength</div>
-              <div class="strength-num" id="gStrength">98</div>
-            </div>
-            <div class="verdict" id="gVerdict"><span class="pip" style="background:var(--good)"></span><span id="gVerdictText">healthy</span></div>
+      <div class="flow reveal">
+        <div class="flow-grid">
+          <div class="node"><div class="ic">Capture</div><div class="ti">checkpoint</div><div class="de">The conversation goes in. Structured reasoning comes out.</div></div>
+          <div class="flowarrow"><span class="bead"></span></div>
+          <div class="node stack">
+            <div class="sub"><b>Reasoning graph</b><div class="de">decisions, why, rejected, open questions</div></div>
+            <div class="sub"><b>Knowledge graph and vectors</b><div class="de">entities and semantics via Cognee</div></div>
+            <div class="sub"><b>Verbatim source</b><div class="de">exact words, content addressed</div></div>
           </div>
-          <div class="gauge-row">
-            <div class="lbl"><span>Context window used</span><b id="gWinPct">0%</b></div>
-            <div class="bar"><span id="gWinBar" style="background:var(--good)"></span></div>
-          </div>
-          <div class="gauge-row">
-            <div class="lbl"><span>Uncaptured drift</span><b id="gDriftPct">5%</b></div>
-            <div class="bar"><span id="gDriftBar" style="background:var(--accent)"></span></div>
-          </div>
-          <div class="kicker" id="gRec" style="margin-top:6px; color:var(--muted); text-transform:none; letter-spacing:.02em;">reasoning state is safe</div>
-        </div>
-        <div class="control">
-          <label for="gRange">Conversation length</label>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-            <span class="kicker">live tokens</span><span class="val" id="gTokens">6,400</span>
-          </div>
-          <input type="range" id="gRange" min="2000" max="230000" step="2000" value="6400" aria-label="Conversation length in tokens">
-          <div style="margin-top:20px;">
-            <label>Model window</label><br>
-            <div class="seg" role="group" aria-label="Model window">
-              <button data-win="200000" aria-pressed="true">Claude, 200k</button>
-              <button data-win="128000" aria-pressed="false">GPT, 128k</button>
-              <button data-win="1000000" aria-pressed="false">Gemini, 1M</button>
-            </div>
-          </div>
-          <p class="lead" style="font-size:.86rem;margin-top:22px;">In an MCP connected AI you just ask how full your context is, and it answers with this gauge, then offers to checkpoint.</p>
+          <div class="flowarrow"><span class="bead"></span></div>
+          <div class="node"><div class="ic">Rebuild</div><div class="ti">resume, recall</div><div class="de">A bounded package that drops into any AI and continues the work.</div></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- FEATURES + CONSOLE -->
-  <section style="background:var(--surface-2); border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft);">
+  <!-- FEATURES -->
+  <section id="features">
     <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">The full instrument</p>
-        <h2>Sixteen verbs. Every surface. One reasoning memory.</h2>
-        <p class="lead">The same commands work from the CLI, from any MCP connected AI, and over HTTP, so a beginner and an autonomous agent use the exact same product.</p>
+      <div class="sec-head reveal">
+        <div class="eyebrow">The toolkit</div>
+        <h2>Six verbs you will use daily. One memory underneath.</h2>
+        <p>Identical everywhere: type them in a terminal, say them in plain English over MCP, or call them from the HTTP API.</p>
       </div>
-      <div class="feat-grid" style="margin-bottom:26px;">
-        <div class="feat"><span class="verb">checkpoint, save</span><h3>Save the whole chat</h3><p>Store verbatim and extract the reasoning graph. Just say save this whole conversation.</p></div>
-        <div class="feat"><span class="verb">capture</span><h3>Pull from Grok, Claude, Codex</h3><p>Reads another tool's native session file directly and checkpoints it, with no copy and paste.</p></div>
-        <div class="feat"><span class="verb">resume</span><h3>Rebuild anywhere</h3><p>A paste ready package that continues the work in any AI, exactly where you left off.</p></div>
-        <div class="feat"><span class="verb">context</span><h3>Context health meter</h3><p>Window fill, drift, strength score, and a checkpoint now signal before loss.</p></div>
-        <div class="feat"><span class="verb">export, import</span><h3>Move and switch platforms</h3><p>Whole state as paste anywhere Markdown, a full transcript, or a lossless JSON bundle.</p></div>
-        <div class="feat"><span class="verb">ingest</span><h3>Add reference docs</h3><p>Feed specs and notes in as knowledge, running the full Cognee knowledge graph pipeline.</p></div>
-        <div class="feat"><span class="verb">improve</span><h3>Self cleaning graph</h3><p>Merge duplicate reasoning, drop dead links, resolve superseded decisions.</p></div>
-        <div class="feat"><span class="verb">prune</span><h3>Active forgetting</h3><p>Trim low salience reasoning so resume packages stay small. Verbatim is never deleted.</p></div>
-        <div class="feat"><span class="verb">distill, lessons</span><h3>Cross project lessons</h3><p>Harvest durable insights from one project and reuse them across all future work.</p></div>
-        <div class="feat"><span class="verb">timeline</span><h3>How the thinking evolved</h3><p>A temporal trace of every checkpoint, so you see when and why the plan changed.</p></div>
-        <div class="feat"><span class="verb">mode</span><h3>See what is active</h3><p>Which layers are live right now: knowledge graph, semantic retrieval, managed LLM.</p></div>
-        <div class="feat"><span class="verb">search, list, forget</span><h3>Own your memory</h3><p>Query verbatim, list projects, and permanently delete anything, per user.</p></div>
+      <div class="cols-3">
+        <div class="card reveal"><div class="tag">Save</div><h3>checkpoint</h3><p>Freeze the working state of a chat: decisions, reasons, rejected options, open questions.</p><code>checkpoint chat.txt -p auth</code></div>
+        <div class="card reveal"><div class="tag">Continue</div><h3>resume</h3><p>Rebuild the latest state as a compact package that pastes into any AI.</p><code>resume -p auth</code></div>
+        <div class="card reveal"><div class="tag">Retrieve</div><h3>recall<span class="new">new</span></h3><p>Pull everything about one subject from the entire history, not just the last save.</p><code>recall -p x "dna mutation"</code></div>
+        <div class="card reveal"><div class="tag">Switch</div><h3>capture</h3><p>Import a session straight from Grok, Claude Code or Codex. No copy paste.</p><code>capture -p x --from grok</code></div>
+        <div class="card reveal"><div class="tag">Safety</div><h3>autopilot<span class="new">new</span></h3><p>Watches the context window and hands you a ready export before anything is lost.</p><code>autopilot -p x -t chat.txt</code></div>
+        <div class="card reveal"><div class="tag">Auto save</div><h3>observe<span class="new">new</span></h3><p>Buffers every turn and checkpoints on its own. Saving stops being your job.</p><code>autosave --source claude_code</code></div>
       </div>
-
-      <div class="console">
-        <div class="pills" role="tablist" aria-label="Try a command">
-          <button role="tab" aria-pressed="true" data-verb="checkpoint">checkpoint</button>
-          <button role="tab" aria-pressed="false" data-verb="capture">capture</button>
-          <button role="tab" aria-pressed="false" data-verb="resume">resume</button>
-          <button role="tab" aria-pressed="false" data-verb="context">context</button>
-          <button role="tab" aria-pressed="false" data-verb="export">export</button>
-          <button role="tab" aria-pressed="false" data-verb="timeline">timeline</button>
-        </div>
-        <div class="screen" id="consoleScreen"></div>
-      </div>
+      <p class="muted mono reveal" style="margin-top:24px; font-size:.84rem">also ingest, export, import, improve, prune, distill, lessons, timeline, search, mode, list, status, forget</p>
     </div>
   </section>
 
-  <!-- ADD TO CLAUDE -->
-  <section id="claude">
+  <!-- SCALE -->
+  <section id="scale">
     <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">Add to Claude, 60 seconds</p>
-        <h2>Connect it once. Then just talk to your AI.</h2>
-        <p class="lead">Continuum is an MCP connector. Paste one URL into Claude's settings and every chat gains memory of its reasoning: save it in one message, resume it in the next, or in a whole new AI.</p>
+      <div class="sec-head reveal">
+        <div class="eyebrow">Built for long work</div>
+        <h2>A month of work, still one continuous thread.</h2>
+        <p>Continuum is not just for one chat. Across weeks, many topics, and several tools, it keeps the whole reasoning trail and hands back exactly the part you need, without ever overflowing the next context window.</p>
       </div>
-      <div class="claude-demo" id="claudeDemo">
-        <ul class="steps" id="claudeSteps">
-          <li data-step="0"><span class="num">1</span><span class="st">Add the connector<small>Settings, Connectors, Add custom connector, paste your mcp URL, Connect</small></span></li>
-          <li data-step="1"><span class="num">2</span><span class="st">Say save this chat<small>Claude calls continuum checkpoint, reasoning state stored</small></span></li>
-          <li data-step="2"><span class="num">3</span><span class="st">Resume anywhere<small>New chat, or another AI entirely, the thinking is intact</small></span></li>
-        </ul>
-        <div class="uiwin">
-          <div class="uibar">
-            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="url" id="claudeUrl">claude.ai/settings/connectors</span>
-          </div>
-          <div class="stage" id="claudeStage">
-            <div class="scene" data-scene="0">
-              <div class="scene-t">Settings, Connectors, Add custom connector</div>
-              <div class="setlabel rise">Remote MCP server URL</div>
-              <div class="setrow rise"><span class="ic"></span> https://rahultwte-continuum-mcp.hf.space/mcp</div>
-              <div class="connect-btn rise">Connect</div>
-              <div class="setrow rise"><span class="ic"></span> Continuum <span class="ok">Connected, 16 tools</span></div>
-            </div>
-            <div class="scene" data-scene="1">
-              <div class="scene-t">In any chat, just ask</div>
-              <div class="msg user rise">Save this whole chat to project billing with continuum.</div>
-              <div class="toolchip rise"><span class="spin"></span> continuum_checkpoint</div>
-              <div class="msg ai rise">Saved <b>billing</b>, 3 decisions and <span class="rej">2 rejected alternatives</span> kept. Resume it anywhere.</div>
-            </div>
-            <div class="scene" data-scene="2">
-              <div class="scene-t">New chat, or a different AI, pick up exactly where you left off</div>
-              <div class="msg user rise">Resume continuum project billing toward the webhook retry.</div>
-              <div class="toolchip rise"><span class="spin"></span> continuum_resume</div>
-              <div class="msg ai rise"><span class="rkey">Goal:</span> low ops billing. <span class="rkey">Decided:</span> Stripe with stateless webhooks. <span class="rej">Rejected:</span> Chargebee, will not re propose. <span class="rkey">Next:</span> webhook retry.</div>
-            </div>
-          </div>
+
+      <div class="wtl reveal">
+        <div class="wtl-track"><span class="wtl-fill"></span><span class="wtl-marker"></span></div>
+        <div class="wtl-stops">
+          <div class="wtl-stop"><span class="wtl-dot"></span><div class="wtl-wk">Week 1</div><div class="wtl-pl">Claude</div><div class="wtl-vb">Save</div></div>
+          <div class="wtl-stop"><span class="wtl-dot"></span><div class="wtl-wk">Week 2</div><div class="wtl-pl">Codex</div><div class="wtl-vb">Autosave</div></div>
+          <div class="wtl-stop"><span class="wtl-dot"></span><div class="wtl-wk">Week 4</div><div class="wtl-pl">Other work</div><div class="wtl-vb">Waits</div></div>
+          <div class="wtl-stop"><span class="wtl-dot"></span><div class="wtl-wk">Week 8</div><div class="wtl-pl">Grok</div><div class="wtl-vb">Recall</div></div>
         </div>
       </div>
-      <p class="kicker" style="margin-top:16px;text-transform:none;letter-spacing:.02em;color:var(--muted)">
-        Live server, paste this URL into your connector settings: <code style="font-family:var(--mono);color:var(--accent)">https://rahultwte-continuum-mcp.hf.space/mcp</code>
-      </p>
-      <p class="kicker" style="margin-top:8px;text-transform:none;letter-spacing:.02em;color:var(--muted)">
-        The same connector works in Grok and ChatGPT. On Claude Code and Codex it is one command: <code style="font-family:var(--mono);color:var(--accent)">claude mcp add continuum -- continuum mcp</code>
-      </p>
-    </div>
-  </section>
 
-  <!-- GET STARTED -->
-  <section id="start" style="background:var(--surface-2); border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft);">
-    <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">Get started, zero to resumed in three minutes</p>
-        <h2>Never used it before? Follow these six steps.</h2>
-        <p class="lead">No account, no cloud, no keys. Everything below runs locally on your machine and works with any AI you already use.</p>
-      </div>
-      <div class="flow">
-        <div class="flow-step"><span class="idx">INSTALL</span><h3>Install Continuum</h3><p>One command, Python 3.11 or newer.</p><code>pipx install continuum</code></div>
-        <div class="flow-step"><span class="idx">SAVE</span><h3>Save a conversation</h3><p>Checkpoint a chat file, or inside an MCP connected AI just say save this whole chat to myproject with continuum.</p><code>continuum checkpoint -p myproject &lt; conversation.txt</code></div>
-        <div class="flow-step"><span class="idx">RESUME</span><h3>Resume in any AI</h3><p>Print the resume package and paste it into a fresh chat, same model or a different one.</p><code>continuum resume -p myproject</code></div>
-        <div class="flow-step"><span class="idx">CHECK</span><h3>Watch your context health</h3><p>Mid conversation, see how safe your reasoning is and when to save.</p><code>continuum context -p myproject -m claude</code></div>
-        <div class="flow-step"><span class="idx">MOVE</span><h3>Switch platforms</h3><p>Pull a chat straight from another tool, or export the whole state to paste into ChatGPT, Grok or Gemini.</p><code>continuum capture -p myproject --from grok --latest</code></div>
-        <div class="flow-step"><span class="idx">DEPLOY</span><h3>Go live for others</h3><p>One blueprint puts the API and remote MCP server on Render, Fly or any Docker host, with a persistent disk and a token.</p><code>render blueprint, connect repo, deploy</code></div>
+      <div class="cols-2" style="margin-top:40px">
+        <div class="card reveal"><div class="tag">Recall</div><h3>The thread, not the latest</h3><p>Every checkpoint on a subject, merged into one.</p><code>recall -p x "dna mutation"</code></div>
+        <div class="card reveal"><div class="tag">Bounded export</div><h3>Always fits the window</h3><p>A year of history, still one clean paste.</p><code>export -p x -f digest</code></div>
+        <div class="card reveal"><div class="tag">Hands free</div><h3>Saved every turn</h3><p>Checkpointed after each turn, on its own.</p><code>continuum autosave</code></div>
+        <div class="card reveal"><div class="tag">Agent native</div><h3>Query, not swallow</h3><p>Agents pull only what they need.</p><code>GET /decisions/auth</code></div>
       </div>
     </div>
   </section>
 
-  <!-- INTEGRATIONS -->
-  <section>
+  <!-- COMPARE -->
+  <section id="compare">
     <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">Integrations</p>
-        <h2>Add it to the AI you already use.</h2>
-        <p class="lead">Continuum speaks MCP, so any MCP capable AI gets all sixteen verbs as tools. Or talk to it over plain HTTP.</p>
+      <div class="sec-head reveal">
+        <div class="eyebrow">The category we created</div>
+        <h2>Everyone stores facts. Only Continuum stores the reasoning.</h2>
+        <p>Memory systems cover a thin slice, they recall knowledge. Continuum covers the whole surface, because it saves the working state of a decision and carries it to another AI.</p>
       </div>
-      <div class="int-grid">
-        <div class="int"><h3>Claude Code, Codex <span class="badge">MCP stdio</span></h3><p>Register the local server once, then say checkpoint this with continuum.</p><pre>claude mcp add continuum -- continuum mcp</pre></div>
-        <div class="int"><h3>Claude web, Grok <span class="badge">MCP remote</span></h3><p>Run the streamable HTTP server and add its URL as a custom connector.</p><pre>continuum mcp -t streamable-http \
-  --host 0.0.0.0 --port 8771</pre></div>
-        <div class="int"><h3>Cursor, any MCP client <span class="badge">MCP config</span></h3><p>Point the client's MCP config at the command.</p><pre>{ "mcpServers": {
-  "continuum": { "command": "continuum",
-                 "args": ["mcp"] } } }</pre></div>
-        <div class="int"><h3>HTTP API, your app <span class="badge">REST</span></h3><p>Run the server and call it from anything. Multi tenant via a user header.</p><pre>continuum serve
-POST /checkpoint  { project, text }
-GET  /export/{project}?format=md</pre></div>
+
+      <div class="radar-wrap reveal">
+        <div class="radar-card">
+          <svg class="radar" id="radar" viewBox="0 0 400 400" role="img" aria-label="Radar chart. Continuum scores high on reasoning, rejected options, resume, capture, knowledge and context. A typical memory layer scores high only on knowledge and context.">
+            <polygon class="grid" points="200,50 329.9,125 329.9,275 200,350 70.1,275 70.1,125"></polygon>
+            <polygon class="grid" points="200,101 285.7,150.5 285.7,249.5 200,299 114.3,249.5 114.3,150.5"></polygon>
+            <polygon class="grid" points="200,150.5 242.9,175.3 242.9,224.7 200,249.5 157.1,224.7 157.1,175.3"></polygon>
+            <line class="spoke" x1="200" y1="200" x2="200" y2="50"></line>
+            <line class="spoke" x1="200" y1="200" x2="329.9" y2="125"></line>
+            <line class="spoke" x1="200" y1="200" x2="329.9" y2="275"></line>
+            <line class="spoke" x1="200" y1="200" x2="200" y2="350"></line>
+            <line class="spoke" x1="200" y1="200" x2="70.1" y2="275"></line>
+            <line class="spoke" x1="200" y1="200" x2="70.1" y2="125"></line>
+            <polygon class="poly typ" points="200.0,179.0 213.0,192.5 231.2,218.0 200.0,248.0 103.9,255.5 122.1,155.0"></polygon>
+            <polygon class="poly cont" points="200.0,54.5 323.4,128.8 324.7,272.0 200.0,335.0 85.7,266.0 90.9,137.0"></polygon>
+            <circle class="tvx" cx="200.0" cy="179.0" r="2.6"></circle>
+            <circle class="tvx" cx="213.0" cy="192.5" r="2.6"></circle>
+            <circle class="tvx" cx="231.2" cy="218.0" r="2.6"></circle>
+            <circle class="tvx" cx="200.0" cy="248.0" r="2.6"></circle>
+            <circle class="tvx" cx="103.9" cy="255.5" r="2.6"></circle>
+            <circle class="tvx" cx="122.1" cy="155.0" r="2.6"></circle>
+            <circle class="vtx" cx="200.0" cy="54.5" r="3.6"></circle>
+            <circle class="vtx" cx="323.4" cy="128.8" r="3.6"></circle>
+            <circle class="vtx" cx="324.7" cy="272.0" r="3.6"></circle>
+            <circle class="vtx" cx="200.0" cy="335.0" r="3.6"></circle>
+            <circle class="vtx" cx="85.7" cy="266.0" r="3.6"></circle>
+            <circle class="vtx" cx="90.9" cy="137.0" r="3.6"></circle>
+            <text class="lbl" x="200" y="36" text-anchor="middle">Reasoning</text>
+            <text class="lbl" x="345" y="118" text-anchor="start">Rejected</text>
+            <text class="lbl" x="345" y="288" text-anchor="start">Resume</text>
+            <text class="lbl" x="200" y="374" text-anchor="middle">Capture</text>
+            <text class="lbl" x="55" y="288" text-anchor="end">Knowledge</text>
+            <text class="lbl" x="55" y="118" text-anchor="end">Context</text>
+          </svg>
+          <div class="legend">
+            <div><span class="sw c"></span> <span class="lglabel">Continuum</span> <span class="lgpct">92% average coverage</span></div>
+            <div><span class="sw t"></span> <span class="lglabel">Typical memory layer (Cognee, Mem0, Letta, Supermemory)</span> <span class="lgpct dim">36% average coverage</span></div>
+          </div>
+        </div>
+        <div class="points">
+          <div class="pt reveal"><span class="num">01</span><div><h4>Reasoning state</h4><p>The decision with its reason, and the alternative with why it lost. No other memory layer can reconstruct this.</p></div></div>
+          <div class="pt reveal"><span class="num">02</span><div><h4>Resume package</h4><p>A compact, paste ready state that continues the work in any provider, on any machine.</p></div></div>
+          <div class="pt reveal"><span class="num">03</span><div><h4>Cross tool capture</h4><p>Reads Grok, Claude Code and Codex session files directly, so changing tools costs you nothing.</p></div></div>
+          <div class="pt reveal"><span class="num">04</span><div><h4>Knowledge graph</h4><p>On Cognee Cloud the full knowledge graph is included, which makes Continuum a layer above Cognee, not a rival.</p></div></div>
+        </div>
+      </div>
+
+      <div class="tblwrap reveal" style="margin-top:44px">
+        <table>
+          <thead><tr><th>Capability</th><th class="c">Claude</th><th class="c">Codex, Grok</th><th class="c">mem0</th><th class="c">Cognee</th><th class="c">Continuum</th></tr></thead>
+          <tbody>
+            <tr><th>Remembers reasoning</th><td class="c no">internal</td><td class="c no">no</td><td class="c no">facts</td><td class="c no">entities</td><td class="c yes">yes</td></tr>
+            <tr><th>Portable across AIs</th><td class="c no">locked</td><td class="c mid">one way</td><td class="c yes">yes</td><td class="c no">no</td><td class="c yes">yes</td></tr>
+            <tr><th>Knowledge graph and vectors</th><td class="c no">no</td><td class="c no">no</td><td class="c mid">partial</td><td class="c yes">yes</td><td class="c yes">superset</td></tr>
+            <tr><th>Recall by subject across months</th><td class="c no">no</td><td class="c no">no</td><td class="c no">no</td><td class="c no">no</td><td class="c yes">yes</td></tr>
+            <tr><th>Bounded and incremental export</th><td class="c no">no</td><td class="c no">no</td><td class="c no">no</td><td class="c no">no</td><td class="c yes">yes</td></tr>
+            <tr><th>Automatic per turn save</th><td class="c mid">lossy</td><td class="c no">no</td><td class="c no">no</td><td class="c no">no</td><td class="c yes">hook</td></tr>
+            <tr class="us"><th>Cross platform resume with reasoning</th><td class="c no">no</td><td class="c no">no</td><td class="c no">no</td><td class="c no">no</td><td class="c yes">unique</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- START -->
+  <section id="start">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">Get started</div>
+        <h2>Two minutes to connect. Then you just talk.</h2>
+        <p>Pick where you work. Every path ends the same way: you speak to your AI in plain English, and it remembers.</p>
+      </div>
+      <div class="tabs reveal" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-tab="web">Web AI</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="cli">CLI</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="hook">Claude Code auto save</button>
+      </div>
+      <div class="panel" data-panel="web">
+        <div class="steps">
+          <div class="step"><div class="n">01</div><div><h4>Add a custom connector</h4><p>Claude web, Grok or ChatGPT, Settings, Connectors, Add custom connector.</p></div></div>
+          <div class="step"><div class="n">02</div><div><h4>Paste the live MCP URL</h4><div class="codeblock">https://rahultwte-continuum-mcp.hf.space/mcp</div></div></div>
+          <div class="step"><div class="n">03</div><div><h4>Talk to your AI</h4><div class="codeblock">"save this whole chat to continuum project auth"
+"resume continuum project auth"
+"recall our dna mutation work in project x"</div></div></div>
+        </div>
+      </div>
+      <div class="panel" data-panel="cli" hidden>
+        <div class="steps">
+          <div class="step"><div class="n">01</div><div><h4>Install</h4><div class="codeblock"><span class="p">$</span> pip install "continuum[all]"</div></div></div>
+          <div class="step"><div class="n">02</div><div><h4>Save and resume</h4><div class="codeblock"><span class="p">$</span> continuum checkpoint chat.txt <span class="f">-p</span> auth
+<span class="p">$</span> continuum resume <span class="f">-p</span> auth</div></div></div>
+          <div class="step"><div class="n">03</div><div><h4>Switch platforms</h4><div class="codeblock"><span class="p">$</span> continuum export <span class="f">-p</span> auth <span class="f">-f</span> digest <span class="f">--max-tokens</span> 5000</div></div></div>
+        </div>
+      </div>
+      <div class="panel" data-panel="hook" hidden>
+        <div class="steps">
+          <div class="step"><div class="n">01</div><div><h4>Add one Stop hook</h4><div class="codeblock">"hooks": { "Stop": [{ "hooks": [{
+  "type": "command",
+  "command": "…/continuum_autosave.py"
+}]}]}</div></div></div>
+          <div class="step"><div class="n">02</div><div><h4>Work normally</h4><p>Every turn checkpoints itself into a project named after the folder, debounced.</p></div></div>
+          <div class="step"><div class="n">03</div><div><h4>Pick up any time</h4><div class="codeblock"><span class="p">$</span> continuum timeline <span class="f">-p</span> my-project</div></div></div>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- PRICING -->
-  <section id="pricing" style="background:var(--surface-2); border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft);">
+  <section id="pricing">
     <div class="wrap">
-      <div class="head">
-        <p class="eyebrow">Pricing</p>
-        <h2>Free forever locally. Pay when you want it everywhere.</h2>
-        <p class="lead">The engine is open and local first. Paid plans add hosted sync, the remote connector, team memory, and the controls enterprises need.</p>
+      <div class="sec-head reveal">
+        <div class="eyebrow">Pricing</div>
+        <h2>Start free today. Upgrade when your memory should follow you everywhere.</h2>
+        <p>The local tier is free forever, no card and no keys. Pay when you want hosted memory on every device, semantic recall across months of work, and saving that happens on its own.</p>
       </div>
       <div class="price-grid">
-        <div class="tier">
-          <div class="tname">Solo</div>
+        <div class="tier reveal">
+          <div class="tname">Free</div>
           <div class="price">$0<small> forever</small></div>
-          <p class="who">For individuals running it on their own machine.</p>
+          <div class="subline">For personal projects on one machine.</div>
           <ul>
-            <li>Local backend, all sixteen verbs</li>
-            <li>CLI and local MCP server</li>
-            <li>Unlimited projects and checkpoints</li>
-            <li>Export and import your data</li>
+            <li><span class="ck"></span> Local memory, unlimited checkpoints</li>
+            <li><span class="ck"></span> Up to 3 projects</li>
+            <li><span class="ck"></span> CLI and copy paste into any AI</li>
+            <li><span class="ck"></span> Keyword search and resume</li>
           </ul>
-          <a class="btn btn-ghost" href="#start">Install free</a>
+          <a class="btn ghost" href="#start">Start free</a>
         </div>
-        <div class="tier pop">
+        <div class="tier hot reveal">
+          <div class="badge">Most popular</div>
           <div class="tname">Pro</div>
-          <div class="price">$19<small> per month</small></div>
-          <p class="who">For power users across many chats, sessions and providers.</p>
+          <div class="price">$19<small> / month</small></div>
+          <div class="subline">For people who live in more than one AI.</div>
           <ul>
-            <li>Hosted cloud sync across devices</li>
-            <li>Always on remote MCP connector</li>
-            <li>Cognee powered semantic recall</li>
-            <li>Context health and cross project lessons</li>
+            <li><span class="ck"></span> Everything in Free</li>
+            <li><span class="ck"></span> Hosted MCP, synced on every device</li>
+            <li><span class="ck"></span> Unlimited projects</li>
+            <li><span class="ck"></span> Semantic recall across months (Cognee)</li>
+            <li><span class="ck"></span> Autopilot and automatic per turn save</li>
           </ul>
-          <a class="btn btn-primary" href="#start">Start Pro trial</a>
+          <a class="btn" href="#start">Start Pro trial</a>
         </div>
-        <div class="tier">
+        <div class="tier reveal">
           <div class="tname">Team</div>
-          <div class="price">$39<small> per user, mo</small></div>
-          <p class="who">For teams sharing reasoning across a codebase or product.</p>
+          <div class="price">$39<small> / user / mo</small></div>
+          <div class="subline">For teams that decide together.</div>
           <ul>
-            <li>Everything in Pro</li>
-            <li>Shared project and lesson memory</li>
-            <li>Per user isolation and roles</li>
-            <li>Usage analytics and audit log</li>
+            <li><span class="ck"></span> Everything in Pro</li>
+            <li><span class="ck"></span> Shared projects and roles</li>
+            <li><span class="ck"></span> Per user isolated memory</li>
+            <li><span class="ck"></span> Priority support</li>
           </ul>
-          <a class="btn btn-ghost" href="#start">Start a team</a>
+          <a class="btn ghost" href="#start">Start a team</a>
         </div>
-        <div class="tier">
+        <div class="tier reveal">
           <div class="tname">Enterprise</div>
           <div class="price">Custom</div>
-          <p class="who">For orgs needing self hosting and compliance.</p>
+          <div class="subline">For organizations with requirements.</div>
           <ul>
-            <li>Self host or VPC deployment</li>
-            <li>SSO, SAML and SCIM</li>
-            <li>Bring your own Cognee and models</li>
-            <li>SLA, DPA and dedicated support</li>
+            <li><span class="ck"></span> Self host or private cloud</li>
+            <li><span class="ck"></span> SSO and audit trail</li>
+            <li><span class="ck"></span> SLA and dedicated support</li>
+            <li><span class="ck"></span> Volume pricing</li>
           </ul>
-          <a class="btn btn-ghost" href="#pricing">Contact sales</a>
+          <a class="btn ghost" href="#start">Talk to us</a>
         </div>
+      </div>
+      <div class="assure">
+        <span><i></i>14 day Pro trial</span>
+        <span><i></i>Cancel anytime</span>
+        <span><i></i>Export everything, any time</span>
+        <span><i></i>No lock in, ever</span>
+      </div>
+      <p class="price-note">Your reasoning is yours. Every tier exports to Markdown or JSON on demand, and the local tier keeps working even if you never pay us a cent.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">Questions, answered</div>
+        <h2>Everything people ask before they connect it.</h2>
+      </div>
+      <div class="faq reveal">
+        <details>
+          <summary>Do I need an API key or an account to try it?</summary>
+          <div class="fa">No. The free tier runs entirely on your machine with zero keys and zero services. Install it, save a chat, resume it. Keys only enter the picture if you want cleaner LLM extraction or the hosted knowledge graph.</div>
+        </details>
+        <details>
+          <summary>What exactly does Continuum store?</summary>
+          <div class="fa">Two things, both readable by you: the verbatim conversation as the source of truth, and a structured reasoning layer on top, meaning the decisions, the reasons, the rejected options, and the open questions. Nothing is hidden and everything exports.</div>
+        </details>
+        <details>
+          <summary>How is this different from ChatGPT memory or Claude projects?</summary>
+          <div class="fa">Those remember things inside one product. Continuum remembers the working state of your thinking and moves it between products. Save in Claude, continue in Grok, finish in Codex. No built in memory crosses that line.</div>
+        </details>
+        <details>
+          <summary>Will a long project eventually overflow the context window?</summary>
+          <div class="fa">No. Resume packages are bounded by a token budget, digest compresses older history while keeping recent work in full, and recall pulls only the subject you ask for. A year of work still arrives as one clean paste.</div>
+        </details>
+        <details>
+          <summary>What happens to my data if I cancel?</summary>
+          <div class="fa">You keep everything. Export any project as Markdown or JSON at any moment, and the free local tier keeps working forever. Leaving takes one command, which is exactly how it should be.</div>
+        </details>
+        <details>
+          <summary>Can my whole team share one memory?</summary>
+          <div class="fa">Yes. The Team tier gives every person an isolated memory plus shared projects, so anyone can see what was decided and why without digging through chat logs.</div>
+        </details>
       </div>
     </div>
   </section>
 
-  <!-- FINAL -->
-  <section>
+  <section class="final">
     <div class="wrap">
-      <div class="final">
-        <p class="eyebrow">Stop re explaining yourself to your AI</p>
-        <h2>Give your reasoning a memory that outlives the context window.</h2>
-        <p class="lead">Install it in a minute, save one conversation, and resume it in a brand new chat. That is the whole promise, and it works today.</p>
-        <div class="hero-cta" style="justify-content:center;">
-          <a class="btn btn-primary" href="#claude">Add to Claude in 60 seconds</a>
-          <a class="btn btn-ghost" href="#compare">See the difference</a>
+      <div class="reveal">
+        <div class="eyebrow" style="justify-content:center">Give reasoning a memory</div>
+        <h2>The context window ends. Your thinking should not.</h2>
+        <p>Save the why once. It will be there in any AI, on any machine, months from now, exactly as you left it.</p>
+        <div class="hero-cta">
+          <a class="btn" href="#pricing">Start free <span class="chev"></span></a>
+          <button class="btn ghost" id="copyUrl2">Copy MCP URL</button>
         </div>
       </div>
     </div>
@@ -845,250 +1116,169 @@ GET  /export/{project}?format=md</pre></div>
 
 <footer>
   <div class="wrap foot-in">
-    <span>Continuum, the reasoning memory for AI</span>
-    <span>checkpoint, resume, context, capture, everywhere your thinking goes</span>
+    <div class="brand" style="font-size:.95rem"><span class="dot"></span>continuum</div>
+    <div class="foot-links mono">
+      <a href="#everyai">Problem</a><a href="#journey">Walkthrough</a><a href="#features">Features</a><a href="#compare">Why us</a><a href="#pricing">Pricing</a><a href="#start">Docs</a>
+    </div>
+    <div class="muted mono">reasoning state continuity, provider neutral</div>
   </div>
 </footer>
 
 <script>
-(function () {
-  "use strict";
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var root = document.documentElement, tbtn = document.getElementById("themeBtn");
-  tbtn.addEventListener("click", function () {
-    var cur = root.getAttribute("data-theme");
-    if (!cur) cur = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
-    draw && draw(performance.now());
+(function(){
+  var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var URL_ = "https://rahultwte-continuum-mcp.hf.space/mcp";
+  function copy(btn, hint){
+    if(!navigator.clipboard) return;
+    navigator.clipboard.writeText(URL_).then(function(){
+      if(hint){ hint.textContent="copied"; setTimeout(function(){hint.textContent="click to copy";},1500); }
+      else if(btn){ var t=btn.textContent; btn.textContent="Copied"; setTimeout(function(){btn.textContent=t;},1500); }
+    });
+  }
+  var cu=document.getElementById("copyUrl"), ch=document.getElementById("copyHint");
+  cu&&cu.addEventListener("click",function(){copy(cu,ch);});
+  var cu2=document.getElementById("copyUrl2"); cu2&&cu2.addEventListener("click",function(){copy(cu2,null);});
+
+  /* reveal */
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target);} });},{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(function(el){io.observe(el);});
+  var radar=document.getElementById("radar");
+  if(radar){ var ro=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){ radar.classList.add("draw"); ro.unobserve(radar);} });},{threshold:.35}); ro.observe(radar); }
+
+  /* tabs */
+  var tabs=document.querySelectorAll(".tab"), panels=document.querySelectorAll(".panel");
+  tabs.forEach(function(t){t.addEventListener("click",function(){
+    tabs.forEach(function(x){x.setAttribute("aria-selected","false");});
+    t.setAttribute("aria-selected","true");
+    panels.forEach(function(p){p.hidden=p.getAttribute("data-panel")!==t.getAttribute("data-tab");});
+  });});
+
+  /* ---- JOURNEY engine (video-style, segmented timeline) ---- */
+  var scenes=[].slice.call(document.querySelectorAll("#stage .scene"));
+  var timeline=document.getElementById("timeline");
+  var chapter=document.getElementById("chapter");
+  var capTitle=document.getElementById("capTitle"), capText=document.getElementById("capText");
+  var idx=0, playing=false, raf=null, DUR=6000, fills=[];
+
+  scenes.forEach(function(s,i){
+    var b=document.createElement("button"); b.className="seg"; b.setAttribute("role","tab");
+    b.setAttribute("aria-label", s.getAttribute("data-title"));
+    var f=document.createElement("i"); b.appendChild(f); fills.push(f);
+    b.addEventListener("click",function(){ go(i,true); });
+    timeline.appendChild(b);
   });
-  function tok(name) { return getComputedStyle(root).getPropertyValue(name).trim(); }
 
-  /* hero signal canvas */
-  var cv = document.getElementById("signal"), ctx = cv.getContext("2d"), draw;
-  function fit() {
-    var r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
-    cv.width = r.width * dpr; cv.height = r.height * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-  draw = function (t) {
-    var r = cv.getBoundingClientRect(), W = r.width, H = r.height, midY = H * 0.5;
-    ctx.clearRect(0, 0, W, H);
-    var accent = tok("--accent"), border = tok("--border"), faint = tok("--faint"), crit = tok("--crit"), good = tok("--good");
-    var cliffX = W * 0.5, gap = Math.max(46, W * 0.05);
-    ctx.strokeStyle = border; ctx.globalAlpha = .5; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(W, midY); ctx.stroke(); ctx.globalAlpha = 1;
-    function wave(x, amp, freq, ph) { return Math.sin(x * freq + ph) * amp + Math.sin(x * freq * 2.3 + ph * 1.7) * amp * 0.35; }
-    ctx.lineWidth = 2; ctx.strokeStyle = faint; ctx.beginPath();
-    for (var x = 0; x <= cliffX - gap; x += 3) {
-      var decay = Math.max(0, 1 - Math.max(0, x - (cliffX - gap * 2.4)) / (gap * 1.6));
-      var y = midY + wave(x, 26 * decay, 0.03, t * 0.0016);
-      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-    ctx.setLineDash([4, 5]); ctx.strokeStyle = crit; ctx.globalAlpha = .8;
-    ctx.beginPath(); ctx.moveTo(cliffX - gap, H * 0.12); ctx.lineTo(cliffX - gap, H * 0.88); ctx.stroke();
-    ctx.setLineDash([]); ctx.globalAlpha = 1;
-    ctx.font = "10px ui-monospace, monospace"; ctx.fillStyle = crit;
-    ctx.fillText("context limit", cliffX - gap + 6, H * 0.16);
-    ctx.strokeStyle = accent; ctx.lineWidth = 2.6; ctx.shadowColor = accent; ctx.shadowBlur = 10;
-    ctx.beginPath();
-    for (var bx = cliffX - gap; bx <= cliffX + gap; bx += 3) {
-      var p = (bx - (cliffX - gap)) / (gap * 2);
-      var by = midY - Math.sin(p * Math.PI) * 40;
-      bx === cliffX - gap ? ctx.moveTo(bx, by) : ctx.lineTo(bx, by);
-    }
-    ctx.stroke();
-    ctx.beginPath();
-    for (var x2 = cliffX + gap; x2 <= W; x2 += 3) {
-      var grow = Math.min(1, (x2 - (cliffX + gap)) / (gap * 1.4));
-      var y2 = midY + wave(x2, 26 * grow, 0.03, t * 0.0016);
-      x2 === cliffX + gap ? ctx.moveTo(x2, y2) : ctx.lineTo(x2, y2);
-    }
-    ctx.stroke(); ctx.shadowBlur = 0;
-    ctx.fillStyle = accent;
-    var cps = [W * 0.16, W * 0.30, cliffX, W * 0.72, W * 0.88];
-    for (var i = 0; i < cps.length; i++) {
-      var cx = cps[i];
-      var yy = (cx <= cliffX - gap || cx >= cliffX + gap) ? midY + wave(cx, 26, 0.03, t * 0.0016) : midY - 40;
-      var pulse = reduce ? 3 : 3 + Math.sin(t * 0.004 + i) * 1.4;
-      ctx.globalAlpha = .9; ctx.beginPath(); ctx.arc(cx, yy, pulse, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = .18; ctx.beginPath(); ctx.arc(cx, yy, pulse * 2.6, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-    if (!reduce) {
-      var px = (t * 0.06) % W;
-      ctx.strokeStyle = good; ctx.globalAlpha = .5; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(px, H * 0.1); ctx.lineTo(px, H * 0.9); ctx.stroke(); ctx.globalAlpha = 1;
-    }
-    ctx.font = "10px ui-monospace, monospace";
-    ctx.textAlign = "center"; ctx.fillStyle = accent;
-    ctx.fillText("continuum bridge", cliffX, midY - 52);
-    ctx.textAlign = "left"; ctx.fillStyle = faint;
-    ctx.fillText("session one", 6, H - 12);
-    ctx.textAlign = "right"; ctx.fillText("session two, rebuilt", W - 6, H - 12);
-    ctx.textAlign = "left";
-  };
-  function loop(t) { draw(t); if (!reduce) requestAnimationFrame(loop); }
-  fit(); window.addEventListener("resize", function () { fit(); draw(performance.now()); });
-  if (reduce) draw(0); else requestAnimationFrame(loop);
-
-  /* radar chart */
-  (function buildRadar() {
-    var svg = document.getElementById("radar"); if (!svg) return;
-    var NS = "http://www.w3.org/2000/svg", cx = 250, cy = 208, R = 130;
-    var axes = [
-      { k: "Reasoning", c: 1, o: 0.04 },
-      { k: "Rejected", c: 1, o: 0.04 },
-      { k: "Resume", c: 1, o: 0.04 },
-      { k: "Capture", c: 1, o: 0.04 },
-      { k: "Knowledge", c: 0.7, o: 0.72 },
-      { k: "Context", c: 1, o: 0.04 }
-    ];
-    var N = axes.length;
-    function add(tag, attrs) { var el = document.createElementNS(NS, tag); for (var k in attrs) el.setAttribute(k, attrs[k]); svg.appendChild(el); return el; }
-    function pt(i, r) { var a = -Math.PI / 2 + i * 2 * Math.PI / N; return [cx + Math.cos(a) * r * R, cy + Math.sin(a) * r * R]; }
-    [0.25, 0.5, 0.75, 1].forEach(function (rr) {
-      add("polygon", { points: axes.map(function (_, i) { return pt(i, rr).join(","); }).join(" "), class: "r-ring" });
-    });
-    axes.forEach(function (ax, i) {
-      var e = pt(i, 1); add("line", { x1: cx, y1: cy, x2: e[0], y2: e[1], class: "r-axis" });
-      var l = pt(i, 1.22), t = add("text", { x: l[0], y: l[1], class: "r-lbl",
-        "text-anchor": l[0] < cx - 5 ? "end" : (l[0] > cx + 5 ? "start" : "middle") });
-      t.textContent = ax.k;
-    });
-    add("polygon", { points: axes.map(function (ax, i) { return pt(i, ax.o).join(","); }).join(" "), class: "r-others" });
-    add("polygon", { points: axes.map(function (ax, i) { return pt(i, ax.c).join(","); }).join(" "), class: "r-us" });
-  })();
-
-  /* context gauge */
-  var win = 200000, stored = 3200, range = document.getElementById("gRange");
-  function fmt(n) { return n.toLocaleString("en-US"); }
-  function gauge() {
-    var live = parseInt(range.value, 10);
-    var winPct = Math.round(1000 * live / win) / 10;
-    var unsaved = Math.max(0, live - stored);
-    var unsavedPct = live ? Math.round(1000 * unsaved / live) / 10 : 0;
-    var strength = Math.max(0, Math.round(100 - winPct - Math.min(40, unsavedPct * 0.4)));
-    var action, color, txt;
-    if (winPct >= 75 || unsavedPct >= 50) { action = "checkpoint now, close to losing reasoning state"; color = tok("--crit"); txt = "checkpoint now"; }
-    else if (winPct >= 50 || unsavedPct >= 30) { action = "checkpoint soon, drift is building"; color = tok("--warn"); txt = "checkpoint soon"; }
-    else { action = "reasoning state is safe"; color = tok("--good"); txt = "healthy"; }
-    document.getElementById("gTokens").textContent = fmt(live);
-    var sEl = document.getElementById("gStrength"); sEl.textContent = strength; sEl.style.color = color;
-    document.getElementById("gWinPct").textContent = winPct + "%";
-    document.getElementById("gDriftPct").textContent = unsavedPct + "%";
-    var wb = document.getElementById("gWinBar"), db = document.getElementById("gDriftBar");
-    wb.style.width = Math.min(100, winPct) + "%";
-    wb.style.background = winPct >= 75 ? tok("--crit") : winPct >= 50 ? tok("--warn") : tok("--good");
-    db.style.width = Math.min(100, unsavedPct) + "%";
-    db.style.background = unsavedPct >= 50 ? tok("--crit") : tok("--accent");
-    document.getElementById("gRec").textContent = action;
-    var v = document.getElementById("gVerdict");
-    v.querySelector(".pip").style.background = color;
-    document.getElementById("gVerdictText").textContent = txt;
-  }
-  range.addEventListener("input", gauge);
-  document.querySelectorAll(".seg button").forEach(function (b) {
-    b.addEventListener("click", function () {
-      document.querySelectorAll(".seg button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-      b.setAttribute("aria-pressed", "true");
-      win = parseInt(b.getAttribute("data-win"), 10);
-      range.max = Math.max(230000, Math.round(win * 1.15));
-      gauge();
-    });
-  });
-  gauge();
-
-  /* verb console */
-  var demos = {
-    checkpoint: { cmd: "continuum checkpoint -p billing < chat.txt",
-      out: '<span class="hl">checkpoint saved</span>  project=billing  id=cp-7e74  decisions=3  mode=heuristic\n  stored 12 verbatim chunks, extracted 9 reasoning nodes, 2 rejected alternatives' },
-    capture: { cmd: "continuum capture -p billing --from grok --latest",
-      out: '<span class="hl">captured</span>  project=billing  source=grok  turns=471  id=cp-649a  decisions=12\n  from ~/.grok/sessions/chat_history.jsonl, no copy and paste' },
-    resume: { cmd: "continuum resume -p billing -i 'webhook retry'",
-      out: 'RESUME PACKAGE, project billing\n  Goal: low ops billing, no vendor lock in\n  Decided: Stripe with stateless webhooks\n  Rejected: <span class="hl">Chargebee</span>, pricing lock in, do not re propose\n  Relevant verbatim follows' },
-    context: { cmd: "continuum context -p billing -m claude",
-      out: 'Continuum context health, project billing\n  window  41%  yellow\n  drift   99% uncaptured\n  strength <span class="hl">20 of 100</span>\n  checkpoint now, you are close to losing reasoning state' },
-    export: { cmd: "continuum export -p billing -f transcript | pbcopy",
-      out: 'CONTINUUM EXPORT, project billing\n  full conversation, clean and role tagged\n  <span class="hl">copied</span>, now paste into ChatGPT, Grok or Gemini' },
-    timeline: { cmd: "continuum timeline -p billing",
-      out: '2026-07-02 14:10  cp-1a2b  decisions=1 open=3\n2026-07-03 09:22  cp-3c4d  decisions=2 open=2\n2026-07-05 16:41  cp-7e74  decisions=3 open=1  <span class="hl">latest</span>' }
-  };
-  var screen = document.getElementById("consoleScreen");
-  function showVerb(v) { var d = demos[v]; screen.innerHTML = '<div class="cmd">' + d.cmd + '</div><div class="out">' + d.out + '</div>'; }
-  document.querySelectorAll(".console .pills button").forEach(function (b) {
-    b.addEventListener("click", function () {
-      document.querySelectorAll(".console .pills button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-      b.setAttribute("aria-pressed", "true");
-      showVerb(b.getAttribute("data-verb"));
-    });
-  });
-  showVerb("checkpoint");
-
-  /* animated terminal */
-  var termBody = document.getElementById("termBody");
-  if (termBody) {
-    var steps = [
-      { cmd: "continuum capture -p feature --from grok --latest",
-        out: ['<span class="hl">captured</span> from grok, 471 turns, 12 decisions', '  nothing pasted, read the session file directly'] },
-      { cmd: "continuum context -p feature -m claude",
-        out: ['strength <span class="hl">42 of 100</span>, window 61%, drift 88%', '  checkpoint soon, drift is building'] },
-      { cmd: "continuum checkpoint -p feature < chat.txt",
-        out: ['<span class="hl">saved</span> id=cp-7e74, reasoning graph, verbatim and knowledge graph'] },
-      { cmd: "# switch to Claude, resume with the reasoning intact",
-        out: ['RESUME PACKAGE, project feature', '  Decided: Stripe with stateless webhooks', '  Rejected: <span class="hl">Chargebee</span>, pricing lock in, do not re propose'] },
-      { cmd: "continuum export -p feature -f transcript | pbcopy",
-        out: ['<span class="hl">copied</span> full conversation, paste into ChatGPT, Grok or Gemini'] }
-    ];
-    var MAXLINES = 13, lines = [], si = 0;
-    function esc(s) { return s.replace(/</g, "&lt;"); }
-    function render(typing) {
-      termBody.innerHTML = lines.join("\n") + (typing != null ?
-        '\n<span class="l-cmd"><span class="pr">$ </span>' + typing + '<span class="caret"></span></span>' : "");
-    }
-    function pushCapped(html) { lines.push(html); while (lines.length > MAXLINES) lines.shift(); }
-    if (reduce) {
-      steps.forEach(function (s) {
-        pushCapped('<span class="l-cmd"><span class="pr">$ </span>' + esc(s.cmd) + "</span>");
-        s.out.forEach(function (o) { pushCapped('<span class="l-out">' + o + "</span>"); });
-      });
-      render(null);
-    } else { typeStep(); }
-    function typeStep() {
-      var step = steps[si], cmd = step.cmd, i = 0;
-      (function type() {
-        render(esc(cmd.slice(0, i)));
-        if (i++ <= cmd.length) { setTimeout(type, 26 + Math.random() * 34); return; }
-        pushCapped('<span class="l-cmd"><span class="pr">$ </span>' + esc(cmd) + "</span>");
-        var oi = 0;
-        (function outLine() {
-          if (oi < step.out.length) { pushCapped('<span class="l-out">' + step.out[oi++] + "</span>"); render(null); setTimeout(outLine, 320); }
-          else { si = (si + 1) % steps.length; if (si === 0) setTimeout(function () { lines = []; typeStep(); }, 1600); else setTimeout(typeStep, 900); }
-        })();
-      })();
+  function setFills(p){
+    for(var i=0;i<fills.length;i++){
+      fills[i].style.width = i<idx ? "100%" : (i===idx ? ((rm?100:Math.round((p||0)*100))+"%") : "0%");
     }
   }
-
-  /* add to claude cycler */
-  var demo = document.getElementById("claudeDemo");
-  if (demo) {
-    var scenes = demo.querySelectorAll(".scene"), stepEls = demo.querySelectorAll(".steps li");
-    var urlEl = document.getElementById("claudeUrl");
-    var urls = ["claude.ai/settings/connectors", "claude.ai/chat", "claude.ai/chat, new"];
-    var ci = 0, timer = null;
-    function showScene(n) {
-      scenes.forEach(function (s, i) { s.classList.toggle("active", i === n); });
-      stepEls.forEach(function (s, i) { s.classList.toggle("on", i === n); });
-      if (urlEl) urlEl.textContent = urls[n];
-    }
-    function tick() { ci = (ci + 1) % scenes.length; showScene(ci); }
-    function restart() { if (reduce) return; clearInterval(timer); timer = setInterval(tick, 4200); }
-    stepEls.forEach(function (li, i) { li.style.cursor = "pointer"; li.addEventListener("click", function () { ci = i; showScene(ci); restart(); }); });
-    if (reduce) {
-      demo.classList.add("rm");
-      scenes.forEach(function (s) { s.classList.add("active"); });
-      stepEls.forEach(function (s) { s.classList.add("on"); });
-      if (urlEl) urlEl.textContent = "claude.ai";
-    } else { showScene(0); restart(); }
+  var WORDS=["one","two","three","four","five","six","seven","eight","nine"];
+  var capKh=document.getElementById("capKh");
+  function paint(){
+    scenes.forEach(function(s,i){ s.classList.toggle("is-on", i===idx); });
+    var cur=scenes[idx];
+    chapter.textContent=cur.getAttribute("data-title");
+    if(capKh) capKh.textContent="Chapter "+(WORDS[idx]||String(idx+1));
+    capTitle.textContent=cur.getAttribute("data-title");
+    capText.textContent=cur.getAttribute("data-cap");
+    setFills(0);
+    void cur.offsetWidth; // restart entrance animations
   }
+  function go(i,manual){ idx=(i+scenes.length)%scenes.length; paint(); if(manual) pause(); }
+  function loop(){
+    var t0=performance.now(); cancelAnimationFrame(raf);
+    (function step(now){
+      var p=Math.min(1,(now-t0)/DUR); setFills(p);
+      if(p>=1){ idx=(idx+1)%scenes.length; paint(); t0=now; }
+      raf=requestAnimationFrame(step);
+    })(t0);
+  }
+  function play(){ playing=true; icon(); loop(); }
+  function pause(){ playing=false; icon(); cancelAnimationFrame(raf); }
+  function icon(){
+    var el=document.getElementById("play");
+    el.innerHTML = playing ? '<span class="ico-pause"><i></i><i></i></span>' : '<span class="ico-play"></span>';
+    el.setAttribute("aria-label", playing?"Pause":"Play");
+  }
+  document.getElementById("next").addEventListener("click",function(){go(idx+1,true);});
+  document.getElementById("prev").addEventListener("click",function(){go(idx-1,true);});
+  document.getElementById("play").addEventListener("click",function(){ playing?pause():play(); });
+
+  paint(); icon();
+  if(!rm){
+    var started=false;
+    var sObs=new IntersectionObserver(function(es){es.forEach(function(e){
+      if(e.isIntersecting && !started){ started=true; play(); }
+    });},{threshold:.3});
+    sObs.observe(document.getElementById("stage"));
+  }
+
+  /* ---- hero terminal typewriter ---- */
+  var term=document.getElementById("term");
+  var lines=[
+    {t:"cmd",p:"$ ",s:"continuum checkpoint chat.txt -p auth"},
+    {t:"out",s:"saved  id cp-8f2a  decisions 4  topics jwt, auth",cls:"ok"},
+    {t:"gap"},
+    {t:"cmd",p:"$ ",s:"continuum autopilot -p auth -m claude"},
+    {t:"out",s:"window 82 percent  drift 96 percent uncaptured",cls:"out"},
+    {t:"out",s:"switch now, export ready",cls:"dim"},
+    {t:"gap"},
+    {t:"cmd",p:"grok $ ",s:"continuum resume -p auth"},
+    {t:"out",s:"decided JWT stateless  rejected Redis lock race",cls:"out"},
+    {t:"out",s:"open refresh endpoint, continuing from here",cls:"ok"},
+    {t:"gap"},
+    {t:"cmd",p:"$ ",s:"continuum recall -p x \"dna mutation\""},
+    {t:"out",s:"2 of 6 checkpoints match this subject",cls:"ok"}
+  ];
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function colorCmd(p,s){var b=esc(s).replace(/(\s)(-{1,2}[a-z][\w-]*)/g,'$1<span class="flag">$2</span>');
+    return '<span class="prompt">'+esc(p)+'</span><span class="cmd">'+b+'</span>';}
+  if(!term){}
+  else if(rm){
+    term.innerHTML=lines.map(function(l){
+      if(l.t==="gap")return '<div class="ln">&nbsp;</div>';
+      if(l.t==="cmd")return '<div class="ln">'+colorCmd(l.p,l.s)+'</div>';
+      return '<div class="ln '+(l.cls||"out")+'">'+esc(l.s)+'</div>';
+    }).join("");
+  } else {
+    var li=0, buf=[];
+    (function run(){
+      if(li>=lines.length){ setTimeout(function(){li=0;buf=[];term.innerHTML="";run();},4000); return; }
+      var l=lines[li];
+      if(l.t==="gap"){ buf.push('<div class="ln">&nbsp;</div>'); term.innerHTML=buf.join(""); li++; return void setTimeout(run,170); }
+      if(l.t!=="cmd"){ buf.push('<div class="ln '+(l.cls||"out")+'">'+esc(l.s)+'</div>'); term.innerHTML=buf.join(""); li++; return void setTimeout(run,500); }
+      var full=l.s,i=0,ix=buf.push("")-1;
+      (function type(){ i++; buf[ix]='<div class="ln">'+colorCmd(l.p,full.slice(0,i))+'<span class="caret"></span></div>'; term.innerHTML=buf.join("");
+        if(i<full.length) setTimeout(type,26+Math.random()*32);
+        else { buf[ix]='<div class="ln">'+colorCmd(l.p,full)+'</div>'; term.innerHTML=buf.join(""); li++; setTimeout(run,420);} })();
+    })();
+  }
+
+  /* ---- hero canvas thread ---- */
+  if(rm) return;
+  var cv=document.getElementById("thread-canvas"); if(!cv) return;
+  var ctx=cv.getContext("2d"),W,H,DPR,nodes,t0=performance.now();
+  function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+  function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;
+    cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+    var n=Math.max(10,Math.min(18,Math.floor(W/78)));nodes=[];
+    for(var i=0;i<n;i++)nodes.push({x:Math.random()*W,y:Math.random()*H,r:1.3+Math.random()*2,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15,ph:Math.random()*6.28});}
+  function draw(now){var acc=css("--thread")||"#4fe0bd";ctx.clearRect(0,0,W,H);
+    for(var i=0;i<nodes.length;i++){var a=nodes[i];a.x+=a.vx;a.y+=a.vy;if(a.x<0||a.x>W)a.vx*=-1;if(a.y<0||a.y>H)a.vy*=-1;
+      for(var j=i+1;j<nodes.length;j++){var b=nodes[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<150){ctx.strokeStyle=acc;ctx.globalAlpha=(1-d/150)*.15;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}}}
+    var T=(now-t0)/1000;
+    for(var k=0;k<nodes.length;k++){var p=nodes[k];ctx.globalAlpha=(0.35+0.4*(0.5+0.5*Math.sin(T*1.3+p.ph)))*.5;ctx.fillStyle=acc;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.28);ctx.fill();}
+    var seg=nodes.length;if(seg>1){var pos=(T*0.26)%1*(seg-1),i0=Math.floor(pos),fr=pos-i0,A=nodes[i0],B=nodes[Math.min(i0+1,seg-1)],bx=A.x+(B.x-A.x)*fr,by=A.y+(B.y-A.y)*fr;
+      var g=ctx.createRadialGradient(bx,by,0,bx,by,24);g.addColorStop(0,acc);g.addColorStop(1,"transparent");
+      ctx.globalAlpha=.85;ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx,by,24,0,6.28);ctx.fill();
+      ctx.globalAlpha=1;ctx.fillStyle=acc;ctx.beginPath();ctx.arc(bx,by,2.4,0,6.28);ctx.fill();}
+    ctx.globalAlpha=1;requestAnimationFrame(draw);}
+  resize();window.addEventListener("resize",resize);requestAnimationFrame(draw);
 })();
 </script>
+</body>
+</html>

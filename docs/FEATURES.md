@@ -25,8 +25,13 @@ This page is the reference: for each feature, **what it does**, **when to use it
 | Add reference docs/notes as knowledge | **ingest** | "ingest these docs into continuum project X" | `continuum ingest notes.md -p X` |
 | See which storage layers are active | **mode** | "show continuum mode" | `continuum mode` |
 | Continue in a new chat / next day | **resume** | "resume continuum project X" | `continuum resume -p X` |
+| Continue OLD work on a subject (not the latest) | **recall** | "recall our dna-mutation work in project X" | `continuum recall -p X "dna mutation"` |
 | Know if I'm about to lose context | **context** | "continuum, how full is my context?" | `continuum context -p X -t chat.txt` |
+| Auto-hand me an export when the window fills | **autopilot** | "continuum autopilot — am I safe to keep going?" | `continuum autopilot -p X -t chat.txt` |
+| Auto-save every turn of this session | **observe** | "observe this turn into continuum project X" | `continuum observe -p X < turn.txt` |
 | Move to another AI / back it up | **export** | "export continuum project X as markdown" | `continuum export -p X -f md` |
+| Compress months of work to paste-size | **export digest** | "export a digest of continuum project X" | `continuum export -p X -f digest` |
+| Pull only what changed since a date | **export --since** | (usually CLI/agent) | `continuum export -p X --since <ts>` |
 | Restore a saved bundle | **import** | (usually CLI) | `continuum import -p X bundle.json` |
 | Clean up messy memory | **improve** | "improve continuum project X" | `continuum improve -p X` |
 | Shrink memory so resumes stay small | **prune** | "prune continuum project X" | `continuum prune -p X` |

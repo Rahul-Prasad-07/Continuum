@@ -37,6 +37,9 @@ class WorkspaceState(BaseModel):
 
     goal: str = Field(default="", description="The overarching objective.")
     current_task: str = Field(default="", description="What we were actively doing.")
+    # Salient topics/entities this checkpoint is ABOUT (e.g. "dna mutation", "jwt auth"). Lets
+    # `recall` gather every checkpoint on a subject across the whole history — not just the latest.
+    topics: list[str] = Field(default_factory=list)
     decisions: list[Decision] = Field(default_factory=list)
     active_hypotheses: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)

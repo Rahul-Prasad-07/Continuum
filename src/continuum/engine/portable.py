@@ -14,6 +14,7 @@ Both are provider-neutral plain data — no lock-in.
 from __future__ import annotations
 
 import time
+from typing import Optional
 
 from continuum.memory.base import Chunk, MemoryBackend
 from continuum.models import ReasoningGraph, WorkspaceState
@@ -21,16 +22,36 @@ from continuum.models import ReasoningGraph, WorkspaceState
 BUNDLE_VERSION = 1
 
 
+def _toks(s: str) -> int:
+    return max(1, len(s) // 4)
+
+
 # ---------------------------------------------------------------- lossless bundle (json)
-def export_bundle(backend: MemoryBackend, scoped_project: str, display_name: str) -> dict:
-    """Serialize a whole project (verbatim + workspaces + reasoning) to a portable dict."""
+def export_bundle(
+    backend: MemoryBackend,
+    scoped_project: str,
+    display_name: str,
+    since: Optional[float] = None,
+    include_verbatim: bool = True,
+) -> dict:
+    """Serialize a whole project (verbatim + workspaces + reasoning) to a portable dict.
+
+    `since` (unix ts) makes it an INCREMENTAL snapshot — only checkpoints newer than `since`,
+    so a machine can pull just the delta instead of re-reading months of history. When set,
+    verbatim defaults off (the reasoning delta is the point); pass include_verbatim=True to keep it.
+    """
     workspaces = backend.list_workspaces(scoped_project)
+    if since is not None:
+        workspaces = [w for w in workspaces if w.timestamp > since]
+        include_verbatim = include_verbatim and since is None  # incremental = reasoning delta
     graph = backend.get_reasoning(scoped_project)
-    chunks = backend.all_chunks(scoped_project)
+    chunks = backend.all_chunks(scoped_project) if include_verbatim else []
     return {
         "continuum_bundle": BUNDLE_VERSION,
         "project": display_name,
         "exported_at": time.time(),
+        "since": since,
+        "incremental": since is not None,
         "counts": {
             "workspaces": len(workspaces),
             "verbatim": len(chunks),
@@ -93,53 +114,131 @@ def export_transcript(backend: MemoryBackend, scoped_project: str, display_name:
 
 
 # ---------------------------------------------------------------- human-readable (markdown)
-def export_markdown(backend: MemoryBackend, scoped_project: str, display_name: str) -> str:
-    """The whole saved conversation-state as one paste-anywhere document."""
+def export_markdown(
+    backend: MemoryBackend,
+    scoped_project: str,
+    display_name: str,
+    max_tokens: Optional[int] = None,
+    since: Optional[float] = None,
+) -> str:
+    """The whole saved conversation-state as one paste-anywhere document.
+
+    `max_tokens` bounds the output so it always fits the next context window — the reasoning-state
+    (decisions/rejected/open questions) is kept first, then as much verbatim as the budget allows.
+    `since` includes only verbatim/checkpoints newer than a timestamp (an incremental doc).
+    """
     workspaces = backend.list_workspaces(scoped_project)
+    if since is not None:
+        workspaces = [w for w in workspaces if w.timestamp > since]
     graph = backend.get_reasoning(scoped_project)
     chunks = backend.all_chunks(scoped_project)
     ws = workspaces[-1] if workspaces else None
 
-    out: list[str] = [
+    head: list[str] = [
         f"# CONTINUUM EXPORT — project: {display_name}",
         "_Paste this into a new chat on any AI to resume exactly where you left off. "
         "It contains the reasoning-state (decisions, rejected options, open questions) and the "
-        "full verbatim conversation below._\n",
+        "verbatim conversation below._\n",
     ]
 
     if ws:
-        out.append("## Reasoning state (latest checkpoint)")
+        head.append("## Reasoning state (latest checkpoint)")
         if ws.goal:
-            out.append(f"- **Goal:** {ws.goal}")
+            head.append(f"- **Goal:** {ws.goal}")
         if ws.current_task:
-            out.append(f"- **Was working on:** {ws.current_task}")
+            head.append(f"- **Was working on:** {ws.current_task}")
         for d in ws.decisions:
             why = f" — because {d.why}" if d.why else ""
-            out.append(f"- **Decided:** {d.choice}{why}")
+            head.append(f"- **Decided:** {d.choice}{why}")
             for r in d.rejected:
-                out.append(f"    - rejected: {r.option} — {r.why_rejected}")
+                head.append(f"    - rejected: {r.option} — {r.why_rejected}")
         if ws.constraints:
-            out.append("- **Constraints:** " + "; ".join(ws.constraints))
+            head.append("- **Constraints:** " + "; ".join(ws.constraints))
         if ws.open_questions:
-            out.append("- **Open questions:** " + "; ".join(ws.open_questions))
+            head.append("- **Open questions:** " + "; ".join(ws.open_questions))
         if ws.next_steps:
-            out.append("- **Next steps:** " + "; ".join(ws.next_steps))
-        out.append("")
+            head.append("- **Next steps:** " + "; ".join(ws.next_steps))
+        head.append("")
 
     rejected = [n for n in graph.nodes if n.kind == "Alternative" or n.status == "rejected"]
     if rejected:
-        out.append("## Rejected alternatives (do NOT re-propose)")
+        head.append("## Rejected alternatives (do NOT re-propose)")
         for n in rejected:
-            out.append(f"- {n.name}: {n.description}")
+            head.append(f"- {n.name}: {n.description}")
+        head.append("")
+
+    # Verbatim fills whatever budget remains (reasoning-state above is always kept).
+    body: list[str] = []
+    budget = None if max_tokens is None else max_tokens - _toks("\n".join(head))
+    if chunks and (budget is None or budget > 0):
+        body.append("## Full conversation (verbatim, in order)")
+        truncated = False
+        for c in chunks:
+            block = c.text.strip()
+            if budget is not None and _toks("\n".join(body) + block) > budget:
+                truncated = True
+                break
+            body.append(block)
+            body.append("")
+        if truncated:
+            body.append("_(verbatim truncated to fit the token budget — "
+                        "use `export -f json` for the lossless bundle.)_")
+
+    tail = ["---", f"_Exported by Continuum · {len(chunks)} verbatim chunks · "
+            f"{len(graph.nodes)} reasoning nodes._"]
+    return "\n".join(head + body + tail)
+
+
+# ---------------------------------------------------------------- hierarchical digest
+def export_digest(
+    backend: MemoryBackend,
+    scoped_project: str,
+    display_name: str,
+    recent: int = 5,
+    budget_tokens: int = 6000,
+) -> str:
+    """Compress a long project into a bounded digest: the `recent` checkpoints in full detail,
+    everything older collapsed to one line each (task + decision/question counts). This is how a
+    month (or a year) of work stays paste-able in a few thousand tokens instead of exploding the
+    context window."""
+    workspaces = backend.list_workspaces(scoped_project)
+    if not workspaces:
+        return f"# CONTINUUM DIGEST — {display_name}\n_(no checkpoints yet)_"
+
+    out: list[str] = [
+        f"# CONTINUUM DIGEST — project: {display_name}",
+        f"_{len(workspaces)} checkpoints compressed to fit ~{budget_tokens} tokens. "
+        f"Recent work in full; older work summarized._\n",
+    ]
+    old, new = workspaces[:-recent], workspaces[-recent:]
+
+    if old:
+        out.append(f"## Earlier history ({len(old)} checkpoints, summarized)")
+        for w in old:
+            when = _ymd(w.timestamp)
+            what = w.current_task or w.goal or (", ".join(w.topics[:2]) if w.topics else "—")
+            out.append(f"- {when} · {what[:90]} "
+                       f"({len(w.decisions)} decisions, {len(w.open_questions)} open)")
         out.append("")
 
-    if chunks:
-        out.append("## Full conversation (verbatim, in order)")
-        for c in chunks:
-            out.append(c.text.strip())
-            out.append("")
+    out.append(f"## Recent work ({len(new)} checkpoints, full detail)")
+    for w in new:
+        out.append(f"### {_ymd(w.timestamp)} — {w.current_task or w.goal or w.checkpoint_id}")
+        for d in w.decisions:
+            why = f" — because {d.why}" if d.why else ""
+            out.append(f"- **Decided:** {d.choice}{why}")
+        if w.open_questions:
+            out.append("- **Open:** " + "; ".join(w.open_questions))
+        out.append("")
 
-    out.append("---")
-    out.append(f"_Exported by Continuum · {len(chunks)} verbatim chunks · "
-               f"{len(graph.nodes)} reasoning nodes._")
-    return "\n".join(out)
+    # Bound it: keep trimming the earliest 'recent' detail until under budget.
+    text = "\n".join(out)
+    while _toks(text) > budget_tokens and len(out) > 6:
+        del out[3:5]  # peel from the earlier-history section first
+        text = "\n".join(out)
+    return text
+
+
+def _ymd(ts: float) -> str:
+    import datetime as _dt
+    return _dt.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")

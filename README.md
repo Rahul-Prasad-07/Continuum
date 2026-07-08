@@ -13,7 +13,9 @@ Most memory tools remember facts, which you can always look up again. They do no
 * **Move and back up.** Export the whole state as Markdown, a full transcript, or a lossless JSON bundle, and import it on another machine or into another project.
 * **Keep memory clean.** Per user isolation, plus improve, prune, distill, and lessons to deduplicate reasoning and reuse durable insights across projects.
 
-The full command set is the same across the CLI, MCP, and HTTP: checkpoint, save, resume, capture, ingest, context, export, import, improve, prune, distill, lessons, timeline, search, mode, list, status, forget.
+The full command set is the same across the CLI, MCP, and HTTP: checkpoint, save, resume, recall, capture, ingest, context, autopilot, observe, export, import, improve, prune, distill, lessons, timeline, search, mode, list, status, forget.
+
+For long, multi-topic work there is a scalability layer on top of the core loop: **recall** resumes by *subject* across the whole history (every checkpoint about a topic, not just the latest); **autopilot** watches context health and hands you a paste-ready export the moment the window crosses a threshold; **observe** buffers each turn and auto-checkpoints a whole session with no explicit save; and **export** gains `digest` (recent checkpoints in full, older ones summarized so a month of work stays paste-size), `--max-tokens` (bound the output to fit any window), and `--since` (incremental delta). See [docs/SCALING.md](docs/SCALING.md).
 
 ## Install
 

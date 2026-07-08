@@ -90,6 +90,14 @@ def build_server(remote: bool = False):
         return engine.resume(project, intent=intent)
 
     @mcp.tool()
+    def continuum_recall(project: str, subject: str) -> str:
+        """Resume by SUBJECT across the WHOLE project history — gather every checkpoint about a
+        topic or intent, not just the latest one. Use when the user says things like "continue our
+        work on X", "what did we decide about X", or the topic was worked on earlier but the most
+        recent checkpoint is about something else. Example subject: "dna mutation"."""
+        return engine.recall(project, subject)
+
+    @mcp.tool()
     def continuum_status(project: str) -> str:
         """Report saved reasoning-state for a project."""
         return ", ".join(f"{k}={v}" for k, v in engine.status(project).items())
@@ -157,11 +165,14 @@ def build_server(remote: bool = False):
 
         format='md' (default): a paste-anywhere document of the whole conversation-state —
         give it to the user to paste into a fresh chat on any provider.
+        format='digest': a COMPRESSED view (recent checkpoints full, older summarized) — use for
+        long projects (weeks/months) so it fits the next context window.
         format='json': a lossless bundle for backup or importing into another Continuum.
         """
         import json as _json
 
-        data = engine.export(project, fmt="md" if format == "md" else "json")
+        fmt = format if format in ("md", "digest", "json", "transcript") else "md"
+        data = engine.export(project, fmt=fmt)
         return data if isinstance(data, str) else _json.dumps(data)
 
     @mcp.tool()
@@ -186,6 +197,32 @@ def build_server(remote: bool = False):
 
         report = engine.context(project, live_text=current_chat, model=model)
         return render_gauge(report)
+
+    @mcp.tool()
+    def continuum_autopilot(project: str, current_chat: str = "", model: str = "claude",
+                            threshold: int = 80) -> str:
+        """Watch this conversation and, when the context window crosses `threshold`% (default 80),
+        automatically hand back a paste-ready export so the user can switch to a fresh tab or
+        another AI before reasoning-state is lost. Call this periodically in a long chat. Pass the
+        current transcript as `current_chat`. Below the threshold it just reports health."""
+        res = engine.autopilot(project, live_text=current_chat, model=model, threshold_pct=threshold)
+        if res["switch_now"]:
+            return (res["gauge"] + f"\n\n⚠ SWITCH NOW — {res['reason']}. "
+                    "Give the user this portable export to paste into a new chat/provider:\n\n"
+                    + res["export"])
+        return res["gauge"] + "\n\n✓ healthy — keep working."
+
+    @mcp.tool()
+    def continuum_observe(project: str, turn: str, flush_tokens: int = 6000) -> str:
+        """Auto-save mode: append THIS exchange (user+assistant turn) to a rolling session buffer;
+        Continuum auto-checkpoints when the buffer fills. Call this after every exchange to save an
+        entire session with no explicit "save this chat". Pass the latest turn's text as `turn`."""
+        res = engine.observe(project, turn, flush_tokens=flush_tokens)
+        if res["checkpointed"]:
+            return (f"auto-checkpointed '{project}' (id={res['checkpoint_id']}, "
+                    f"{res['decisions']} decisions). Buffer cleared; keep calling continuum_observe.")
+        return (f"buffered {res['buffered_tokens']}/{res['flush_at']} tokens for '{project}' "
+                "(will auto-checkpoint at the threshold).")
 
     @mcp.tool()
     def continuum_capture(project: str, source: str = "auto", path: str = "") -> str:

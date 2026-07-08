@@ -71,6 +71,24 @@ class ResumeReq(BaseModel):
     budget_tokens: Optional[int] = None
 
 
+class RecallReq(BaseModel):
+    project: str
+    subject: str
+    budget_tokens: Optional[int] = None
+
+
+class ObserveReq(BaseModel):
+    turn: str
+    flush_tokens: int = 6000
+    force: bool = False
+
+
+class AutopilotReq(BaseModel):
+    text: str = ""
+    model: str = "claude"
+    threshold: int = 80
+
+
 class ImportReq(BaseModel):
     bundle: dict
 
@@ -103,6 +121,41 @@ def checkpoint(req: CheckpointReq, user: str = Depends(_user), _=Depends(_auth))
 def resume(req: ResumeReq, user: str = Depends(_user), _=Depends(_auth)) -> dict:
     pkg = engine(user).resume(req.project, intent=req.intent, budget_tokens=req.budget_tokens)
     return {"project": req.project, "resume_package": pkg}
+
+
+@app.post("/recall")
+def recall(req: RecallReq, user: str = Depends(_user), _=Depends(_auth)) -> dict:
+    """Resume by SUBJECT across the whole history (topic/intent), not just the latest checkpoint."""
+    pkg = engine(user).recall(req.project, req.subject, budget_tokens=req.budget_tokens)
+    return {"project": req.project, "subject": req.subject, "recall_package": pkg}
+
+
+@app.get("/search/{project}")
+def search(project: str, q: str, k: int = 6, user: str = Depends(_user), _=Depends(_auth)) -> dict:
+    """Agent-optimized: structured semantic/keyword hits — no full export needed."""
+    return {"project": project, "query": q, "hits": engine(user).search(project, q, k=k)}
+
+
+@app.get("/decisions/{project}")
+def decisions(project: str, user: str = Depends(_user), _=Depends(_auth)) -> dict:
+    """Agent-optimized: the latest checkpoint's decisions as structured JSON (choice/why/rejected)."""
+    ws = engine(user).backend.latest_workspace(engine(user)._scope(project))
+    if not ws:
+        return {"project": project, "decisions": []}
+    return {"project": project, "decisions": [d.model_dump(mode="json") for d in ws.decisions]}
+
+
+@app.post("/autopilot/{project}")
+def autopilot(project: str, req: AutopilotReq, user: str = Depends(_user), _=Depends(_auth)) -> dict:
+    """Gauge context health; when the window crosses `threshold`%, include a paste-ready export."""
+    return engine(user).autopilot(project, live_text=req.text, model=req.model,
+                                  threshold_pct=req.threshold)
+
+
+@app.post("/observe/{project}")
+def observe(project: str, req: ObserveReq, user: str = Depends(_user), _=Depends(_auth)) -> dict:
+    """Auto-save: buffer a turn; auto-checkpoint at the token threshold (or force=true)."""
+    return engine(user).observe(project, req.turn, flush_tokens=req.flush_tokens, force=req.force)
 
 
 @app.post("/ingest")
@@ -158,9 +211,12 @@ def timeline(project: str, user: str = Depends(_user), _=Depends(_auth)) -> dict
 
 
 @app.get("/export/{project}")
-def export(project: str, format: str = "json", user: str = Depends(_user), _=Depends(_auth)):
-    """Export a project. format=json → lossless bundle; format=md → paste-anywhere document."""
-    data = engine(user).export(project, fmt="md" if format == "md" else "json")
+def export(project: str, format: str = "json", max_tokens: Optional[int] = None,
+           since: Optional[float] = None, user: str = Depends(_user), _=Depends(_auth)):
+    """Export a project. format=json → lossless bundle (supports `since`); md → paste-anywhere
+    doc (supports `max_tokens`, `since`); digest → compressed for long work; transcript → full chat."""
+    fmt = format if format in ("json", "md", "digest", "transcript") else "json"
+    data = engine(user).export(project, fmt=fmt, max_tokens=max_tokens, since=since)
     if isinstance(data, str):
         from fastapi.responses import PlainTextResponse
 

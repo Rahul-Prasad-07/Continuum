@@ -51,6 +51,7 @@ def extract(
 def _extract_llm(text: str, project: str, llm: LLMClient):
     schema_hint = (
         '{"workspace": {"goal": str, "current_task": str, '
+        '"topics": [str], '
         '"decisions": [{"choice": str, "why": str, "rejected": [{"option": str, '
         '"why_rejected": str}]}], "active_hypotheses": [str], "constraints": [str], '
         '"open_questions": [str], "blocked_by": [str], "next_steps": [str], "code_refs": [str]}, '
@@ -74,7 +75,7 @@ def _extract_llm(text: str, project: str, llm: LLMClient):
 
 def _coerce_workspace(w: dict) -> dict:
     keys = [
-        "goal", "current_task", "decisions", "active_hypotheses", "constraints",
+        "goal", "current_task", "topics", "decisions", "active_hypotheses", "constraints",
         "open_questions", "blocked_by", "next_steps", "code_refs",
     ]
     return {k: w[k] for k in keys if k in w}
@@ -130,11 +131,42 @@ def _extract_heuristic(text: str, project: str, chunks: list[Chunk]):
     goal = next((s for s in sents if re.search(r"\b(build|design|goal|want to|trying to)\b", s, re.I)), "")
     ws = WorkspaceState(
         project=project, goal=goal[:200], current_task=(sents[-1] if sents else ""),
-        decisions=decisions[:12], active_hypotheses=hypotheses[:8],
+        topics=topics_of(text), decisions=decisions[:12], active_hypotheses=hypotheses[:8],
         constraints=constraints[:8], open_questions=questions[:8],
         next_steps=[], code_refs=re.findall(r"[\w/]+\.\w{1,4}(?::\d+)?", text)[:12],
     ).with_id()
     return ws, ReasoningGraph(nodes=nodes[:40], edges=edges[:60])
+
+
+_TOPIC_STOP = {
+    "the", "a", "an", "and", "or", "to", "of", "in", "on", "for", "is", "it", "we", "i",
+    "this", "that", "with", "was", "are", "you", "our", "not", "but", "can", "will", "have",
+    "has", "how", "what", "why", "let", "lets", "use", "using", "now", "so", "if", "as", "be",
+    "do", "does", "from", "they", "them", "your", "my", "me", "at", "by", "up", "out", "all",
+    "one", "two", "get", "got", "make", "made", "want", "wants", "need", "needs", "should",
+}
+
+
+def topics_of(text: str, k: int = 8) -> list[str]:
+    """Heuristic topic keywords for a conversation: the most frequent salient words + notable
+    two-word phrases. Cheap, no LLM — enough to let `recall` find every checkpoint on a subject."""
+    words = [w for w in re.findall(r"[a-zA-Z][a-zA-Z0-9-]{2,}", text.lower())
+             if w not in _TOPIC_STOP]
+    freq: dict[str, int] = {}
+    for w in words:
+        freq[w] = freq.get(w, 0) + 1
+    # notable adjacent bigrams (both words salient) — captures "dna mutation", "jwt auth"
+    bigrams: dict[str, int] = {}
+    for a, b in zip(words, words[1:]):
+        bigrams[f"{a} {b}"] = bigrams.get(f"{a} {b}", 0) + 1
+    top_bi = [p for p, c in sorted(bigrams.items(), key=lambda t: t[1], reverse=True) if c >= 2][:4]
+    top_uni = [w for w, _ in sorted(freq.items(), key=lambda t: t[1], reverse=True)][:k]
+    # keep phrases first (more specific), then fill with single words, deduped
+    out: list[str] = []
+    for t in top_bi + top_uni:
+        if t not in out and not any(t in o for o in out):
+            out.append(t)
+    return out[:k]
 
 
 def _extract_why(s: str) -> str:
