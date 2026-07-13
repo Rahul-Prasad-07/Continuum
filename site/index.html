@@ -7,6 +7,13 @@
 <meta name="description" content="Every AI forgets your reasoning when a chat ends. Continuum saves it and resumes it in any other AI, months later, exactly as you left it. Free to start.">
 <meta property="og:title" content="Continuum. Your AI forgets why. Continuum remembers.">
 <meta property="og:description" content="Portable reasoning-state memory. Animated walkthrough, per-tool problem map, pricing, and FAQ. Live MCP endpoint.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,450..750;1,9..144,450..750&display=swap" rel="stylesheet">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1315">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef2f0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230e1315'/><circle cx='32' cy='32' r='10' fill='%2337c6a6'/><circle cx='32' cy='32' r='17' fill='none' stroke='%2337c6a6' stroke-opacity='.45' stroke-width='3'/></svg>">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Continuum","applicationCategory":"DeveloperApplication","operatingSystem":"Web, macOS, Linux","description":"Portable reasoning-state memory for AI. Save the reasoning from any AI and resume it in any other, months later.","url":"https://continuum-gray.vercel.app","offers":[{"@type":"Offer","name":"Free","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Pro","price":"5","priceCurrency":"USD"},{"@type":"Offer","name":"Team","price":"19","priceCurrency":"USD"}]}</script>
 <style>html{margin:0}body{margin:0}</style>
 </head>
 <body>
@@ -20,7 +27,7 @@
     --thread:#4fe0bd;
     --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
     --body:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
-    --max:1120px; --r:12px;
+    --max:1120px; --r:12px; --display:'Fraunces',ui-serif,Georgia,serif;
     --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 20px 50px -30px rgba(0,0,0,.7);
   }
   @media (prefers-color-scheme: light){
@@ -49,7 +56,8 @@
 
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{margin:0; background:var(--ground); color:var(--ink); font-family:var(--body);
+  html{background:var(--ground)}
+  body{margin:0; background:transparent; color:var(--ink); font-family:var(--body); position:relative;
     line-height:1.6; -webkit-font-smoothing:antialiased; font-size:16.5px; overflow-x:hidden}
   .wrap{max-width:var(--max); margin:0 auto; padding:0 24px}
   a{color:inherit; text-decoration:none}
@@ -60,6 +68,62 @@
   .eyebrow{font-family:var(--mono); font-size:.74rem; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); font-weight:600}
   .muted{color:var(--muted)}
   .tnum{font-variant-numeric:tabular-nums}
+
+  /* ===== premium background system ===== */
+  #bgfx{position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden}
+  #bgfx .aurora{position:absolute; inset:-25%;
+    background:
+      radial-gradient(38% 46% at 18% 14%, color-mix(in srgb,var(--accent) 24%, transparent), transparent 62%),
+      radial-gradient(34% 42% at 84% 8%,  color-mix(in srgb,var(--brass) 15%, transparent), transparent 62%),
+      radial-gradient(46% 54% at 78% 78%, color-mix(in srgb,var(--accent) 18%, transparent), transparent 62%),
+      radial-gradient(42% 50% at 8% 88%,  color-mix(in srgb,var(--thread) 14%, transparent), transparent 62%);
+    filter:blur(40px); animation:aurora 30s ease-in-out infinite alternate}
+  @keyframes aurora{0%{transform:translate3d(-2%,-1%,0) scale(1.06)}100%{transform:translate3d(3%,2%,0) scale(1.16)}}
+  #bgfx .grid{position:absolute; inset:0; opacity:.5;
+    background-image:linear-gradient(to right, var(--line-2) 1px, transparent 1px), linear-gradient(to bottom, var(--line-2) 1px, transparent 1px);
+    background-size:58px 58px;
+    -webkit-mask-image:radial-gradient(circle at 50% 24%, #000 0%, transparent 70%);
+    mask-image:radial-gradient(circle at 50% 24%, #000 0%, transparent 70%)}
+  #bgfx .vig{position:absolute; inset:0; background:radial-gradient(135% 95% at 50% -12%, transparent 42%, var(--ground) 100%)}
+
+  /* ===== nav mobile menu ===== */
+  .hamb{display:none; width:42px; height:42px; border:1px solid var(--line); border-radius:10px; background:var(--panel);
+    cursor:pointer; flex-direction:column; align-items:center; justify-content:center; gap:4px; margin-left:auto}
+  .hamb span{display:block; width:18px; height:2px; background:var(--ink); border-radius:2px}
+  .mobile-menu{display:none}
+  @media(max-width:760px){
+    .hamb{display:flex}
+    .mobile-menu{display:block; position:fixed; left:0; right:0; top:60px; z-index:49; padding:12px 24px 20px;
+      background:color-mix(in srgb,var(--ground) 96%, transparent); backdrop-filter:blur(16px); border-bottom:1px solid var(--line);
+      transform:translateY(-130%); transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+    .mobile-menu.open{transform:none}
+    .mobile-menu a{display:block; padding:13px 4px; font-size:1.02rem; color:var(--ink); border-bottom:1px solid var(--line-2)}
+    .mobile-menu a.btn{border-bottom:none; margin-top:12px; justify-content:center}
+  }
+
+  /* ===== hero badges + gradient headline ===== */
+  .hero-badges{display:flex; gap:10px; flex-wrap:wrap; margin-top:24px}
+  .hbadge{font-family:var(--mono); font-size:.72rem; color:var(--ink-soft); border:1px solid var(--line); border-radius:20px;
+    padding:7px 14px; display:inline-flex; gap:8px; align-items:center; background:color-mix(in srgb,var(--panel) 55%, transparent); backdrop-filter:blur(6px)}
+  .hbadge .d{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .hero h1 .g{background:linear-gradient(115deg, var(--accent), var(--thread) 72%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+
+  /* ===== works-with strip ===== */
+  #works{padding:clamp(32px,5vw,54px) 0; border-bottom:1px solid var(--line-2)}
+  .works-label{text-align:center; font-family:var(--mono); font-size:.74rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
+  .works-row{display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:22px}
+  .wchip{font-family:var(--mono); font-size:.94rem; color:var(--ink-soft); border:1px solid var(--line); border-radius:12px;
+    padding:12px 20px; display:inline-flex; align-items:center; gap:10px; background:color-mix(in srgb,var(--panel) 55%, transparent);
+    backdrop-filter:blur(6px); transition:border-color .2s, transform .2s, color .2s}
+  .wchip:hover{border-color:color-mix(in srgb,var(--accent) 45%, var(--line)); transform:translateY(-2px); color:var(--ink)}
+  .wchip .wd{width:9px;height:9px;border-radius:50%;background:var(--accent); box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 20%,transparent)}
+
+  /* ===== premium card hover glow ===== */
+  .card:hover, .gcard:hover, .ai-card:hover{box-shadow:0 24px 56px -34px color-mix(in srgb,var(--accent) 48%, transparent)}
+  .tier{transition:transform .22s, box-shadow .22s, border-color .22s}
+  .tier:hover{transform:translateY(-3px); box-shadow:0 28px 64px -34px color-mix(in srgb,var(--accent) 42%, transparent)}
+
+  @media (prefers-reduced-motion: reduce){ #bgfx .aurora{animation:none} }
 
   /* nav */
   nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
@@ -73,7 +137,7 @@
   .live{font-family:var(--mono); font-size:.72rem; letter-spacing:.1em; color:var(--good); display:inline-flex; align-items:center; gap:6px}
   .live .pulse{width:7px;height:7px;border-radius:50%;background:var(--good); animation:pulse 2s infinite}
   @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 55%,transparent)}50%{opacity:.6;box-shadow:0 0 0 6px transparent}}
-  @media(max-width:760px){.nav-links a:not(.btn-sm){display:none}}
+  @media(max-width:760px){.nav-links{display:none}}
 
   .btn{font-family:var(--mono); font-size:.85rem; font-weight:650; display:inline-flex; align-items:center; gap:9px;
     padding:11px 18px; border-radius:10px; background:var(--accent); color:var(--btn-fg); border:1px solid transparent; cursor:pointer;
@@ -382,6 +446,25 @@
   .lglabel{flex:1 1 auto; min-width:0; line-height:1.45}
   .lgpct{flex:none; white-space:nowrap; margin-left:12px; font-family:var(--mono); font-size:.72rem; color:var(--ink-soft)}
   .lgpct.dim{color:var(--muted)}
+  .gcards{display:flex; flex-direction:column; gap:14px}
+  .gcard{display:grid; grid-template-columns:auto 1fr; gap:18px; align-items:center; border:1px solid var(--line);
+    border-radius:14px; background:var(--panel); padding:18px 20px; transition:border-color .22s, transform .22s, box-shadow .22s}
+  .gcard:hover{border-color:color-mix(in srgb,var(--accent) 42%,var(--line)); transform:translateY(-2px); box-shadow:var(--shadow)}
+  .gwrap{position:relative; width:74px; height:74px; flex:none}
+  .gauge{width:74px; height:74px; transform:rotate(-90deg)}
+  .gtrack{fill:none; stroke:var(--panel-2); stroke-width:5}
+  .garc{fill:none; stroke-width:5; stroke-linecap:round; stroke-dasharray:var(--dash); stroke-dashoffset:var(--dash);
+    transition:stroke-dashoffset 1.3s cubic-bezier(.2,.8,.2,1)}
+  .garc.c{stroke:var(--accent)} .garc.t{stroke:var(--brass)}
+  .reveal.in .garc{stroke-dashoffset:var(--off)}
+  .gnum{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--mono);
+    font-weight:650; font-size:1.12rem; color:var(--accent); letter-spacing:-.02em}
+  .gtitle{font-weight:650; font-size:1.02rem; letter-spacing:-.01em}
+  .gdesc{color:var(--muted); font-size:.88rem; margin-top:5px; max-width:46ch}
+  .gmeta{margin-top:9px; font-family:var(--mono); font-size:.7rem; color:var(--muted); display:inline-flex; align-items:center; gap:7px}
+  .gmeta .gdot{width:8px;height:8px;border-radius:50%;background:var(--brass);flex:none}
+  .gmeta b{color:var(--brass); font-weight:600}
+  @media(max-width:400px){.gcard{grid-template-columns:1fr; justify-items:center; text-align:center}}
 
   /* ---- pricing ---- */
   #pricing{background:var(--panel-2)}
@@ -473,6 +556,7 @@
   .f3-core b{font-family:var(--mono);font-size:.82rem;color:var(--ink)}
   .f3-cap{font-weight:600; font-size:.96rem; display:flex; align-items:center; gap:9px}
   .f3-cap b{width:23px;height:23px;border-radius:7px;background:var(--accent);color:#04211b;font-family:var(--mono);font-size:.82rem;display:flex;align-items:center;justify-content:center;flex:none}
+  .f3-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none}
   .f3-cmd{font-family:var(--mono); font-size:.72rem; color:var(--muted)}
   .f3-track{position:relative; height:2px; background:var(--line); align-self:center; margin-top:52px; min-width:40px; border-radius:2px}
   .f3-track .f3-pk{position:absolute; top:50%; left:0; width:9px;height:9px;margin-top:-4.5px;border-radius:50%; background:var(--thread); box-shadow:0 0 9px var(--thread); animation:f3pk 6s ease-in-out infinite}
@@ -512,11 +596,272 @@
     .radar .poly{transform:scale(1) !important}
     .radar .vtx{opacity:1}
     .radar .tvx{opacity:.9}
+    .garc{stroke-dashoffset:var(--off)}
     .f3-chip,.f3-line{opacity:1 !important; transform:none !important}
     .wtl-dot{background:var(--accent); border-color:var(--accent)}
     .wtl-fill{width:100%} .wtl-marker{left:100%}
   }
+
+  /* ================= V3 PREMIUM LAYER ================= */
+  /* typography: editorial serif display */
+  h1,h2{font-family:var(--display)}
+  h1{font-weight:640}
+  h2{font-weight:600; letter-spacing:-.015em}
+  .hero h1{font-weight:620; letter-spacing:-.02em}
+  .hero h1 .g{font-style:italic; padding-right:.05em}
+  .sec-head .eyebrow::before{content:""; display:inline-block; width:24px; height:1px; background:var(--accent); opacity:.8; margin-right:10px; vertical-align:3px}
+
+  /* nav CTA readability + scrolled state + hamburger X */
+  .nav-links .btn{color:var(--btn-fg)}
+  .nav-links .btn:hover{color:var(--btn-fg)}
+  .mobile-menu .btn{color:var(--btn-fg)}
+  nav{transition:background .25s ease, box-shadow .25s ease, border-color .25s ease}
+  nav.scrolled{background:color-mix(in srgb, var(--ground) 93%, transparent); border-bottom-color:var(--line);
+    box-shadow:0 10px 34px -22px rgba(0,0,0,.55)}
+  .hamb span{transition:transform .22s ease, opacity .18s ease}
+  .hamb.open span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+  .hamb.open span:nth-child(2){opacity:0}
+  .hamb.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+
+  /* scroll progress */
+  #scrollbar{position:fixed; top:0; left:0; height:2.5px; width:0; z-index:70;
+    background:linear-gradient(90deg, var(--accent), var(--thread));
+    box-shadow:0 0 12px color-mix(in srgb, var(--accent) 70%, transparent)}
+
+  /* buttons: gradient + sheen sweep */
+  .btn{position:relative; overflow:hidden; background:linear-gradient(180deg, var(--accent), var(--accent-deep))}
+  .btn::after{content:""; position:absolute; top:0; left:-70%; width:44%; height:100%;
+    background:linear-gradient(105deg, transparent, rgba(255,255,255,.38), transparent);
+    transform:skewX(-20deg); transition:left .55s ease}
+  .btn:hover::after{left:135%}
+  .btn.ghost{background:transparent}
+  .btn.ghost::after{display:none}
+
+  /* hero depth: glowing terminal + floating reasoning chips */
+  .term{box-shadow:var(--shadow), 0 0 110px -42px color-mix(in srgb, var(--accent) 60%, transparent)}
+  .term-wrap{position:relative}
+  .float-chip{position:absolute; z-index:3; font-family:var(--mono); font-size:.72rem; padding:8px 13px; border-radius:20px;
+    border:1px solid var(--line); background:color-mix(in srgb, var(--panel) 80%, transparent); backdrop-filter:blur(8px);
+    box-shadow:0 14px 34px -20px rgba(0,0,0,.55); animation:bob 7s ease-in-out infinite; white-space:nowrap}
+  .float-chip.fc1{top:-15px; right:7%; color:var(--accent); border-color:color-mix(in srgb, var(--accent) 46%, var(--line))}
+  .float-chip.fc2{bottom:11%; left:-24px; color:var(--crit); border-color:color-mix(in srgb, var(--crit) 42%, var(--line)); animation-delay:1.7s}
+  .float-chip.fc3{top:37%; right:-20px; color:var(--brass); border-color:color-mix(in srgb, var(--brass) 44%, var(--line)); animation-delay:3.2s}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @media(max-width:980px){.float-chip.fc2{left:8px}.float-chip.fc3{right:8px}}
+
+  /* works: infinite marquee */
+  .marquee{overflow:hidden; margin-top:22px;
+    -webkit-mask-image:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)}
+  .marq-track{display:flex; width:max-content; animation:marq 30s linear infinite}
+  .marquee:hover .marq-track{animation-play-state:paused}
+  .marq-set{display:flex; gap:12px; padding-right:12px}
+  @keyframes marq{to{transform:translateX(-50%)}}
+
+  /* staggered reveals inside grids */
+  .ai-grid>.reveal:nth-child(2),.cols-3>.reveal:nth-child(2),.cols-2>.reveal:nth-child(2),.gcards>.reveal:nth-child(2),.price-grid>.reveal:nth-child(2){transition-delay:.07s}
+  .ai-grid>.reveal:nth-child(3),.cols-3>.reveal:nth-child(3),.cols-2>.reveal:nth-child(3),.gcards>.reveal:nth-child(3),.price-grid>.reveal:nth-child(3){transition-delay:.14s}
+  .ai-grid>.reveal:nth-child(4),.cols-3>.reveal:nth-child(4),.cols-2>.reveal:nth-child(4),.gcards>.reveal:nth-child(4),.price-grid>.reveal:nth-child(4){transition-delay:.21s}
+  .ai-grid>.reveal:nth-child(5),.cols-3>.reveal:nth-child(5){transition-delay:.28s}
+  .ai-grid>.reveal:nth-child(6),.cols-3>.reveal:nth-child(6){transition-delay:.35s}
+
+  /* manifesto band */
+  #creed{position:relative; text-align:center; overflow:hidden}
+  #creed::before{content:""; position:absolute; inset:0;
+    background:radial-gradient(58% 90% at 50% 50%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 72%)}
+  .creed-line{position:relative; font-family:var(--display); font-style:italic; font-weight:560;
+    font-size:clamp(1.7rem,4.6vw,3.2rem); line-height:1.22; letter-spacing:-.01em; max-width:24ch; margin:0 auto; text-wrap:balance}
+  .creed-line span{background:linear-gradient(115deg, var(--accent), var(--thread) 75%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; font-style:normal}
+
+  /* aurora tuning per theme */
+  @media (prefers-color-scheme: light){#bgfx .aurora{filter:blur(46px) saturate(1.18)}}
+  :root[data-theme="light"] #bgfx .aurora{filter:blur(46px) saturate(1.18)}
+  :root[data-theme="dark"] #bgfx .aurora{filter:blur(40px)}
+
+  /* footer, real company grade */
+  footer{padding:56px 0 42px}
+  .foot-grid{display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:44px; padding-bottom:32px}
+  .foot-tag{color:var(--muted); font-size:.92rem; margin-top:14px; max-width:34ch}
+  .foot-brand .urlpill{margin-top:18px; max-width:100%; overflow-wrap:anywhere}
+  .foot-col h5{margin:0 0 13px; font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:600}
+  .foot-col a{display:block; padding:7px 0; color:var(--muted); font-size:.92rem; transition:color .15s}
+  .foot-col a:hover{color:var(--ink)}
+  .foot-base{display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; border-top:1px solid var(--line-2); padding-top:22px; color:var(--faint); font-size:.8rem}
+  @media(max-width:760px){.foot-grid{grid-template-columns:1fr; gap:28px}}
+
+  /* layout safety */
+  img,svg,canvas{max-width:100%}
+  .hero-grid>*{min-width:0}
+  .urlpill{max-width:100%; overflow-wrap:anywhere; text-align:left}
+
+  /* ============ full mobile pass ============ */
+  @media(max-width:640px){
+    .wrap{padding:0 18px}
+    section{padding:54px 0}
+    .hero-in{padding:36px 0 46px}
+    h2{font-size:clamp(1.5rem,7vw,1.95rem)}
+    .hero h1{font-size:clamp(2.15rem,10vw,2.8rem)}
+    .hero .lede{max-width:none; font-size:1rem}
+    .hero-cta .btn{flex:1 1 auto; justify-content:center}
+    .stat-row{gap:20px}
+    .stat b{font-size:1.28rem}
+    .hbadge{font-size:.64rem; padding:6px 10px}
+    .urlpill{font-size:.7rem}
+    .term{font-size:.76rem}
+    .term-body{min-height:190px; padding:14px}
+    .float-chip{display:none}
+    .stage{height:clamp(470px,132vw,560px)}
+    .scene{padding:18px}
+    .scene-cap{padding:14px 16px 16px}
+    .scene-cap h3{font-size:1rem}
+    .scene-cap p{font-size:.8rem}
+    .core{width:106px; height:106px}
+    .rnode{font-size:.64rem; padding:5px 9px}
+    .wtl-track{display:none}
+    .wtl-stops{grid-template-columns:1fr 1fr; gap:20px 12px}
+    .tabs{gap:6px}
+    .tab{flex:1 1 auto; text-align:center; padding:10px 8px; font-size:.78rem}
+    .price-grid .tier.hot{order:-1}
+    .radar-card{padding:16px}
+    .legend{font-size:.7rem}
+    .lgpct{margin-left:8px}
+    .gdesc{max-width:none}
+    .codeblock{font-size:.72rem}
+    .faq summary{font-size:.9rem; padding:15px 16px}
+    .faq .fa{font-size:.86rem}
+    .creed-line{font-size:clamp(1.4rem,7.5vw,2rem)}
+    .assure{gap:14px}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .marq-track{animation:none; flex-wrap:wrap; justify-content:center; width:auto}
+    .marq-set[aria-hidden]{display:none}
+    .float-chip{animation:none}
+    .btn::after{display:none}
+  }
+
+  /* ================= V4 WORLD-CLASS LAYER ================= */
+  /* a11y */
+  .skip{position:fixed; top:-60px; left:16px; z-index:100; background:var(--accent); color:var(--btn-fg);
+    font-family:var(--mono); font-size:.8rem; padding:10px 16px; border-radius:10px; transition:top .2s}
+  .skip:focus{top:12px}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:6px}
+
+  /* cinematic hero entrance (CSS only, one time) */
+  @keyframes fu2{from{opacity:0; transform:translateY(22px)}to{opacity:1; transform:none}}
+  .hero .live{animation:fu2 .7s .05s both}
+  .hero h1{animation:fu2 .8s .14s both}
+  .hero .lede{animation:fu2 .8s .24s both}
+  .hero .hero-cta{animation:fu2 .8s .34s both}
+  .hero .urlbar{animation:fu2 .8s .42s both}
+  .hero .stat-row{animation:fu2 .8s .5s both}
+  .hero .hero-badges{animation:fu2 .8s .58s both}
+  .hero .term-wrap{animation:termIn 1s .3s both}
+  @keyframes termIn{from{opacity:0; transform:translateY(34px) scale(.965)}to{opacity:1; transform:none}}
+
+  /* gradient hairline section separators */
+  header.hero, main section:not(.final){border-bottom:none; position:relative}
+  header.hero::after, main section:not(.final)::after{content:""; position:absolute; left:0; right:0; bottom:0; height:1px;
+    background:linear-gradient(90deg, transparent 3%, var(--line) 20%, var(--line) 80%, transparent 97%)}
+
+  /* cursor spotlight on interactive surfaces */
+  .card,.gcard,.ai-card,.tier{position:relative}
+  .card::after,.gcard::after,.ai-card::after,.tier::after{content:""; position:absolute; inset:0; border-radius:inherit;
+    background:radial-gradient(190px circle at var(--sx,50%) var(--sy,50%), color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%);
+    opacity:0; transition:opacity .25s; pointer-events:none}
+  .card:hover::after,.gcard:hover::after,.ai-card:hover::after,.tier:hover::after{opacity:1}
+
+  /* pointer tilt + magnetic CTAs */
+  .term-wrap{will-change:transform; transition:transform .18s ease}
+  .magnet{transition:transform .18s ease}
+
+  /* theme toggle */
+  .theme-btn{width:38px; height:38px; border:1px solid var(--line); border-radius:10px; background:var(--panel);
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted);
+    transition:color .18s, border-color .18s; margin-left:auto}
+  .nav-links + .theme-btn{margin-left:14px}
+  .theme-btn:hover{color:var(--accent); border-color:var(--accent)}
+  .theme-btn svg{width:17px; height:17px; display:block}
+  .theme-btn .sun{display:none}
+  @media (prefers-color-scheme: dark){.theme-btn .sun{display:block}.theme-btn .moon{display:none}}
+  :root[data-theme="dark"] .theme-btn .sun{display:block}
+  :root[data-theme="dark"] .theme-btn .moon{display:none}
+  :root[data-theme="light"] .theme-btn .sun{display:none}
+  :root[data-theme="light"] .theme-btn .moon{display:block}
+  @media(max-width:760px){.nav-in .theme-btn{margin-left:auto}.nav-in .hamb{margin-left:10px}}
+
+  /* section waypoints */
+  .waypoints{position:fixed; right:22px; top:50%; transform:translateY(-50%); z-index:45; display:none; flex-direction:column; gap:12px}
+  @media(min-width:1240px){.waypoints{display:flex}}
+  .wp{position:relative; width:9px; height:9px; border-radius:50%; border:1px solid var(--faint); background:transparent; cursor:pointer; padding:0}
+  .wp:hover{border-color:var(--accent)}
+  .wp.on{background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent)}
+  .wp::after{content:attr(data-label); position:absolute; right:20px; top:50%; transform:translateY(-50%);
+    font-family:var(--mono); font-size:.68rem; color:var(--ink); background:var(--panel); border:1px solid var(--line);
+    padding:4px 9px; border-radius:7px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .18s}
+  .wp:hover::after{opacity:1}
+
+  /* ============ interactive demo ============ */
+  #demo{position:relative}
+  #demo::before{content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(52% 70% at 50% 30%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%)}
+  .demo-shell{position:relative; margin-top:40px; border:1px solid var(--line); border-radius:18px; background:var(--panel);
+    box-shadow:var(--shadow), 0 0 90px -50px color-mix(in srgb, var(--accent) 50%, transparent); overflow:hidden;
+    display:grid; grid-template-columns:1fr 210px}
+  .demo-main{min-width:0}
+  .demo-tabs{display:flex; align-items:center; gap:6px; padding:12px 14px; border-bottom:1px solid var(--line-2); background:var(--panel-2)}
+  .demo-tab{font-family:var(--mono); font-size:.8rem; padding:8px 15px; border-radius:9px; border:1px solid transparent;
+    background:transparent; color:var(--muted); cursor:pointer; transition:.18s}
+  .demo-tab:hover{color:var(--ink)}
+  .demo-tab.active{color:var(--accent); border-color:color-mix(in srgb, var(--accent) 50%, var(--line)); background:color-mix(in srgb, var(--accent) 9%, transparent)}
+  .demo-tab.hint{animation:tabhint 1.6s ease-in-out infinite}
+  @keyframes tabhint{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 5px color-mix(in srgb, var(--accent) 18%, transparent)}}
+  .demo-live{margin-left:auto; font-size:.68rem; letter-spacing:.08em; color:var(--muted); display:inline-flex; gap:7px; align-items:center; text-transform:uppercase}
+  .demo-live .ddot{width:7px; height:7px; border-radius:50%; background:var(--faint)}
+  .demo-live.saved .ddot{background:var(--good); box-shadow:0 0 8px var(--good)}
+  .demo-live.saved{color:var(--good)}
+  .demo-body{padding:22px 24px; min-height:238px; font-family:var(--mono); font-size:.86rem; line-height:1.85}
+  .dl{white-space:pre-wrap; word-break:break-word}
+  .dl.u b{color:var(--accent); font-weight:600}
+  .dl.a{color:var(--ink-soft)}
+  .dl.dim{color:var(--faint)}
+  .dl.ok{color:var(--good)}
+  .dl.res{color:var(--accent)}
+  .dl.brass{color:var(--brass)}
+  .demo-chips{display:flex; gap:9px; flex-wrap:wrap; margin:10px 0 4px}
+  .demo-chips .rnode{font-size:.7rem}
+  .demo-actions{display:flex; gap:10px; padding:16px 24px 20px; border-top:1px solid var(--line-2); flex-wrap:wrap}
+  .demo-side{border-left:1px solid var(--line-2); background:color-mix(in srgb, var(--panel-2) 60%, var(--panel));
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:22px}
+  .demo-core{width:118px; height:118px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 40% 34%, color-mix(in srgb, var(--accent) 34%, var(--panel)), var(--panel-2));
+    border:1px solid color-mix(in srgb, var(--accent) 42%, var(--line)); transition:box-shadow .5s}
+  .demo-core span{font-family:var(--mono); font-size:.58rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+  .demo-core b{font-family:var(--mono); font-size:.82rem; color:var(--ink); margin-top:3px}
+  .demo-core.lit{box-shadow:0 0 0 10px color-mix(in srgb, var(--accent) 12%, transparent), 0 0 60px -8px color-mix(in srgb, var(--accent) 60%, transparent)}
+  .demo-side .cap{font-family:var(--mono); font-size:.66rem; color:var(--muted); text-align:center; letter-spacing:.06em}
+  .demo-packet{position:absolute; z-index:5; width:11px; height:11px; border-radius:50%; background:var(--thread);
+    box-shadow:0 0 16px var(--thread); pointer-events:none; transition:transform .75s cubic-bezier(.3,.7,.3,1), opacity .2s .6s}
+  @media(max-width:760px){
+    .demo-shell{grid-template-columns:1fr}
+    .demo-side{border-left:none; border-top:1px solid var(--line-2); flex-direction:row; justify-content:center; padding:16px}
+    .demo-core{width:92px; height:92px}
+    .demo-body{min-height:210px; font-size:.78rem; padding:16px}
+    .demo-actions{padding:14px 16px 16px}
+    .demo-actions .btn{flex:1 1 auto; justify-content:center}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .demo-tab.hint{animation:none}
+    .hero .live,.hero h1,.hero .lede,.hero .hero-cta,.hero .urlbar,.hero .stat-row,.hero .hero-badges,.hero .term-wrap{animation:none}
+  }
 </style>
+
+<div id="bgfx" aria-hidden="true"><div class="aurora"></div><div class="grid"></div><div class="vig"></div></div>
+
+<a class="skip" href="#idea">Skip to content</a>
+<div id="scrollbar" aria-hidden="true"></div>
+<div class="waypoints" id="waypoints" aria-label="Section navigation"></div>
 
 <nav>
   <div class="wrap nav-in">
@@ -524,11 +869,26 @@
     <div class="nav-links">
       <a href="#everyai">Problem</a>
       <a href="#journey">Walkthrough</a>
+      <a href="#demo">Try it</a>
       <a href="#features">Features</a>
       <a href="#compare">Why us</a>
       <a href="#pricing">Pricing</a>
       <a class="btn btn-sm" href="#pricing">Start free</a>
     </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle color theme">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.4"></circle><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5 5l1.7 1.7M17.3 17.3L19 19M19 5l-1.7 1.7M6.7 17.3L5 19"></path></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 14.2A8.3 8.3 0 0 1 9.8 3.6a8.3 8.3 0 1 0 10.6 10.6z"></path></svg>
+    </button>
+    <button class="hamb" id="hamb" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#everyai">Problem</a>
+    <a href="#journey">Walkthrough</a>
+    <a href="#demo">Try it</a>
+    <a href="#features">Features</a>
+    <a href="#compare">Why us</a>
+    <a href="#pricing">Pricing</a>
+    <a class="btn" href="#pricing">Start free</a>
   </div>
 </nav>
 
@@ -553,16 +913,53 @@
           <div class="stat"><b class="tnum">3</b><span>surfaces</span></div>
           <div class="stat"><b class="tnum">38</b><span>tests passing</span></div>
         </div>
+        <div class="hero-badges">
+          <span class="hbadge"><span class="d"></span>MCP native</span>
+          <span class="hbadge"><span class="d"></span>Provider independent</span>
+          <span class="hbadge"><span class="d"></span>Export any time, no lock in</span>
+        </div>
       </div>
-      <div class="term" role="img" aria-label="Terminal demo of continuum checkpoint, resume and recall">
-        <div class="term-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="t mono">continuum</span></div>
-        <div class="term-body" id="term"></div>
+      <div class="term-wrap">
+        <div class="term" role="img" aria-label="Terminal demo of continuum checkpoint, resume and recall">
+          <div class="term-bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="t mono">continuum</span></div>
+          <div class="term-body" id="term"></div>
+        </div>
+        <span class="float-chip fc1">decision: JWT</span>
+        <span class="float-chip fc2">rejected: Redis</span>
+        <span class="float-chip fc3">open: refresh</span>
       </div>
     </div>
   </div>
 </header>
 
 <main>
+  <!-- ============ WORKS WITH EVERY AI ============ -->
+  <section id="works">
+    <div class="wrap">
+      <div class="works-label reveal">One memory, connected to every AI you use</div>
+      <div class="marquee" aria-label="Works with Claude, Grok, ChatGPT, Codex, Cursor and Gemini">
+        <div class="marq-track">
+          <div class="marq-set">
+            <span class="wchip"><span class="wd"></span>Claude</span>
+            <span class="wchip"><span class="wd"></span>Grok</span>
+            <span class="wchip"><span class="wd"></span>ChatGPT</span>
+            <span class="wchip"><span class="wd"></span>Codex</span>
+            <span class="wchip"><span class="wd"></span>Cursor</span>
+            <span class="wchip"><span class="wd"></span>Gemini</span>
+          </div>
+          <div class="marq-set" aria-hidden="true">
+            <span class="wchip"><span class="wd"></span>Claude</span>
+            <span class="wchip"><span class="wd"></span>Grok</span>
+            <span class="wchip"><span class="wd"></span>ChatGPT</span>
+            <span class="wchip"><span class="wd"></span>Codex</span>
+            <span class="wchip"><span class="wd"></span>Cursor</span>
+            <span class="wchip"><span class="wd"></span>Gemini</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ THE PLAIN IDEA ============ -->
   <section id="idea">
     <div class="wrap">
@@ -580,13 +977,13 @@
               <span class="f3-chip rej">rejected: Redis</span>
             </div>
           </div>
-          <div class="f3-cap"><b>1</b> Save the reasoning</div>
+          <div class="f3-cap"><span class="f3-dot"></span> Save the reasoning</div>
           <div class="f3-cmd">save this to continuum</div>
         </div>
         <div class="f3-track t1"><span class="f3-pk"></span></div>
         <div class="f3 st2">
           <div class="f3-core"><span>continuum</span><b>memory</b></div>
-          <div class="f3-cap"><b>2</b> Carried across</div>
+          <div class="f3-cap"><span class="f3-dot"></span> Carried across</div>
           <div class="f3-cmd">any AI, any month</div>
         </div>
         <div class="f3-track t2"><span class="f3-pk"></span></div>
@@ -598,7 +995,7 @@
               <span class="f3-line two">JWT, rejected Redis</span>
             </div>
           </div>
-          <div class="f3-cap"><b>3</b> Resume, intact</div>
+          <div class="f3-cap"><span class="f3-dot"></span> Resume, intact</div>
           <div class="f3-cmd">resume continuum</div>
         </div>
       </div>
@@ -775,6 +1172,44 @@
     </div>
   </section>
 
+  <!-- INTERACTIVE DEMO -->
+  <section id="demo">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">Try it right here</div>
+        <h2>Feel the loop in ten seconds.</h2>
+        <p>A faithful simulation of the real tools. Save the reasoning in one AI, switch platforms, and resume with nothing lost.</p>
+      </div>
+      <div class="demo-shell reveal">
+        <div class="demo-main">
+          <div class="demo-tabs" role="tablist" aria-label="Platforms">
+            <button class="demo-tab active" data-plat="claude" role="tab" aria-selected="true">claude</button>
+            <button class="demo-tab" data-plat="grok" role="tab" aria-selected="false">grok</button>
+            <button class="demo-tab" data-plat="codex" role="tab" aria-selected="false">codex</button>
+            <span class="demo-live" id="demoLive"><span class="ddot"></span><span id="demoState">nothing saved</span></span>
+          </div>
+          <div class="demo-body" id="demoBody" aria-live="polite"></div>
+          <div class="demo-actions">
+            <button class="btn" id="demoAct">Save to Continuum</button>
+            <button class="btn ghost" id="demoReset" hidden>Replay the loop</button>
+          </div>
+        </div>
+        <div class="demo-side">
+          <div class="demo-core" id="demoCore"><span>continuum</span><b id="demoCoreState">empty</b></div>
+          <div class="cap">one memory,<br>outside every platform</div>
+        </div>
+        <span class="demo-packet" id="demoPacket" hidden></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- MANIFESTO -->
+  <section id="creed">
+    <div class="wrap">
+      <p class="creed-line reveal">The model is temporary. <span>The reasoning is yours.</span></p>
+    </div>
+  </section>
+
   <!-- PROBLEM -->
   <section id="why">
     <div class="wrap">
@@ -925,11 +1360,71 @@
             <div><span class="sw t"></span> <span class="lglabel">Typical memory layer (Cognee, Mem0, Letta, Supermemory)</span> <span class="lgpct dim">36% average coverage</span></div>
           </div>
         </div>
-        <div class="points">
-          <div class="pt reveal"><span class="num">01</span><div><h4>Reasoning state</h4><p>The decision with its reason, and the alternative with why it lost. No other memory layer can reconstruct this.</p></div></div>
-          <div class="pt reveal"><span class="num">02</span><div><h4>Resume package</h4><p>A compact, paste ready state that continues the work in any provider, on any machine.</p></div></div>
-          <div class="pt reveal"><span class="num">03</span><div><h4>Cross tool capture</h4><p>Reads Grok, Claude Code and Codex session files directly, so changing tools costs you nothing.</p></div></div>
-          <div class="pt reveal"><span class="num">04</span><div><h4>Knowledge graph</h4><p>On Cognee Cloud the full knowledge graph is included, which makes Continuum a layer above Cognee, not a rival.</p></div></div>
+        <div class="gcards">
+          <div class="gcard reveal">
+            <div class="gwrap">
+              <svg class="gauge" viewBox="0 0 74 74" aria-hidden="true">
+                <circle class="gtrack" cx="37" cy="37" r="30"></circle>
+                <circle class="gtrack" cx="37" cy="37" r="21"></circle>
+                <circle class="garc c" cx="37" cy="37" r="30" style="--dash:188.50;--off:0.0"></circle>
+                <circle class="garc t" cx="37" cy="37" r="21" style="--dash:131.95;--off:125.35"></circle>
+              </svg>
+              <span class="gnum">100</span>
+            </div>
+            <div>
+              <div class="gtitle">Reasoning state</div>
+              <div class="gdesc">The decision, its reason, and the alternative you rejected. Nothing else reconstructs this.</div>
+              <div class="gmeta"><span class="gdot"></span> typical memory <b>5</b></div>
+            </div>
+          </div>
+          <div class="gcard reveal">
+            <div class="gwrap">
+              <svg class="gauge" viewBox="0 0 74 74" aria-hidden="true">
+                <circle class="gtrack" cx="37" cy="37" r="30"></circle>
+                <circle class="gtrack" cx="37" cy="37" r="21"></circle>
+                <circle class="garc c" cx="37" cy="37" r="30" style="--dash:188.50;--off:0.0"></circle>
+                <circle class="garc t" cx="37" cy="37" r="21" style="--dash:131.95;--off:112.15"></circle>
+              </svg>
+              <span class="gnum">100</span>
+            </div>
+            <div>
+              <div class="gtitle">Resume package</div>
+              <div class="gdesc">A compact state that continues the work in any provider, on any machine.</div>
+              <div class="gmeta"><span class="gdot"></span> typical memory <b>15</b></div>
+            </div>
+          </div>
+          <div class="gcard reveal">
+            <div class="gwrap">
+              <svg class="gauge" viewBox="0 0 74 74" aria-hidden="true">
+                <circle class="gtrack" cx="37" cy="37" r="30"></circle>
+                <circle class="gtrack" cx="37" cy="37" r="21"></circle>
+                <circle class="garc c" cx="37" cy="37" r="30" style="--dash:188.50;--off:9.42"></circle>
+                <circle class="garc t" cx="37" cy="37" r="21" style="--dash:131.95;--off:118.75"></circle>
+              </svg>
+              <span class="gnum">95</span>
+            </div>
+            <div>
+              <div class="gtitle">Cross tool capture</div>
+              <div class="gdesc">Reads Grok, Claude Code and Codex sessions directly, so changing tools costs nothing.</div>
+              <div class="gmeta"><span class="gdot"></span> typical memory <b>10</b></div>
+            </div>
+          </div>
+          <div class="gcard reveal">
+            <div class="gwrap">
+              <svg class="gauge" viewBox="0 0 74 74" aria-hidden="true">
+                <circle class="gtrack" cx="37" cy="37" r="30"></circle>
+                <circle class="gtrack" cx="37" cy="37" r="21"></circle>
+                <circle class="garc c" cx="37" cy="37" r="30" style="--dash:188.50;--off:18.85"></circle>
+                <circle class="garc t" cx="37" cy="37" r="21" style="--dash:131.95;--off:19.79"></circle>
+              </svg>
+              <span class="gnum">90</span>
+            </div>
+            <div>
+              <div class="gtitle">Knowledge graph</div>
+              <div class="gdesc">On Cognee Cloud the full graph is included too. A layer above Cognee, not a rival.</div>
+              <div class="gmeta"><span class="gdot"></span> typical memory <b>85</b></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1017,7 +1512,7 @@
         <div class="tier hot reveal">
           <div class="badge">Most popular</div>
           <div class="tname">Pro</div>
-          <div class="price">$19<small> / month</small></div>
+          <div class="price">$5<small> / month</small></div>
           <div class="subline">For people who live in more than one AI.</div>
           <ul>
             <li><span class="ck"></span> Everything in Free</li>
@@ -1030,7 +1525,7 @@
         </div>
         <div class="tier reveal">
           <div class="tname">Team</div>
-          <div class="price">$39<small> / user / mo</small></div>
+          <div class="price">$19<small> / user / mo</small></div>
           <div class="subline">For teams that decide together.</div>
           <ul>
             <li><span class="ck"></span> Everything in Pro</li>
@@ -1115,12 +1610,33 @@
 </main>
 
 <footer>
-  <div class="wrap foot-in">
-    <div class="brand" style="font-size:.95rem"><span class="dot"></span>continuum</div>
-    <div class="foot-links mono">
-      <a href="#everyai">Problem</a><a href="#journey">Walkthrough</a><a href="#features">Features</a><a href="#compare">Why us</a><a href="#pricing">Pricing</a><a href="#start">Docs</a>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="brand"><span class="dot"></span>continuum</div>
+        <p class="foot-tag">The memory layer that makes your AI work portable. Save the why once, continue anywhere.</p>
+        <button class="urlpill" id="copyUrl3"><span class="k">mcp</span> rahultwte-continuum-mcp.hf.space/mcp</button>
+      </div>
+      <div class="foot-col">
+        <h5>Product</h5>
+        <a href="#journey">Walkthrough</a>
+        <a href="#features">Features</a>
+        <a href="#scale">Built for long work</a>
+        <a href="#compare">Why Continuum</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+      <div class="foot-col">
+        <h5>Get started</h5>
+        <a href="#start">Connect in two minutes</a>
+        <a href="#everyai">The problem we solve</a>
+        <a href="#faq">FAQ</a>
+        <a href="#top">Back to top</a>
+      </div>
     </div>
-    <div class="muted mono">reasoning state continuity, provider neutral</div>
+    <div class="foot-base">
+      <span>2026 Continuum. Reasoning state continuity, provider neutral.</span>
+      <span class="mono">one memory, every AI</span>
+    </div>
   </div>
 </footer>
 
@@ -1278,6 +1794,227 @@
       ctx.globalAlpha=1;ctx.fillStyle=acc;ctx.beginPath();ctx.arc(bx,by,2.4,0,6.28);ctx.fill();}
     ctx.globalAlpha=1;requestAnimationFrame(draw);}
   resize();window.addEventListener("resize",resize);requestAnimationFrame(draw);
+})();
+</script>
+<script>
+(function(){
+  var rm=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var h=document.getElementById('hamb'), m=document.getElementById('mobileMenu');
+  if(h&&m){
+    h.addEventListener('click',function(){ m.classList.toggle('open'); h.classList.toggle('open'); });
+    m.querySelectorAll('a').forEach(function(a){ a.addEventListener('click',function(){ m.classList.remove('open'); h.classList.remove('open'); }); });
+  }
+  var bar=document.getElementById('scrollbar'), nav=document.querySelector('nav');
+  function onScroll(){
+    var st=window.scrollY||document.documentElement.scrollTop;
+    var dh=document.documentElement.scrollHeight-window.innerHeight;
+    if(bar) bar.style.width=(dh>0?(st/dh)*100:0)+'%';
+    if(nav) nav.classList.toggle('scrolled', st>8);
+  }
+  window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+  var counted=false, row=document.querySelector('.stat-row');
+  if(row && 'IntersectionObserver' in window && !rm){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){
+      if(e.isIntersecting && !counted){ counted=true; io.disconnect();
+        row.querySelectorAll('.stat b').forEach(function(el){
+          var t=parseInt(el.textContent.replace(/[^0-9]/g,''),10);
+          if(!t) return;
+          var s0=null;
+          function step(n){ if(s0===null)s0=n; var p=Math.min(1,(n-s0)/1100);
+            el.textContent=Math.round(t*(1-Math.pow(1-p,3)));
+            if(p<1)requestAnimationFrame(step); else el.textContent=t; }
+          requestAnimationFrame(step);
+        });
+      }});},{threshold:.4});
+    io.observe(row);
+  }
+  var c3=document.getElementById('copyUrl3');
+  if(c3){ c3.addEventListener('click',function(){
+    if(!navigator.clipboard) return;
+    navigator.clipboard.writeText('https://rahultwte-continuum-mcp.hf.space/mcp').then(function(){
+      var k=c3.querySelector('.k'); if(k){ var o=k.textContent; k.textContent='copied'; setTimeout(function(){k.textContent=o;},1400); }
+    });
+  });}
+})();
+</script>
+<script>
+(function(){
+  var rm=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fine=window.matchMedia&&window.matchMedia('(pointer: fine)').matches;
+  var root=document.documentElement;
+
+  /* theme toggle with persistence */
+  try{ var saved=localStorage.getItem('ctm-theme'); if(saved==='dark'||saved==='light') root.setAttribute('data-theme',saved); }catch(e){}
+  var tb=document.getElementById('themeBtn');
+  if(tb){ tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur){ cur=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'; }
+    var next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{ localStorage.setItem('ctm-theme',next); }catch(e){}
+  }); }
+
+  /* cursor spotlight */
+  if(fine){
+    document.querySelectorAll('.card,.gcard,.ai-card,.tier').forEach(function(el){
+      el.addEventListener('pointermove',function(e){
+        var r=el.getBoundingClientRect();
+        el.style.setProperty('--sx',(e.clientX-r.left)+'px');
+        el.style.setProperty('--sy',(e.clientY-r.top)+'px');
+      });
+    });
+  }
+
+  /* hero terminal tilt */
+  var tw=document.querySelector('.term-wrap');
+  if(tw&&fine&&!rm){
+    tw.addEventListener('pointermove',function(e){
+      var r=tw.getBoundingClientRect();
+      var rx=((e.clientY-r.top)/r.height-.5)*-5, ry=((e.clientX-r.left)/r.width-.5)*6;
+      tw.style.transform='perspective(950px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)';
+    });
+    tw.addEventListener('pointerleave',function(){ tw.style.transform='none'; });
+  }
+
+  /* magnetic primary CTAs */
+  if(fine&&!rm){
+    document.querySelectorAll('.hero-cta .btn:not(.ghost)').forEach(function(b){
+      b.classList.add('magnet');
+      b.addEventListener('pointermove',function(e){
+        var r=b.getBoundingClientRect();
+        b.style.transform='translate('+(((e.clientX-r.left)/r.width-.5)*5).toFixed(1)+'px,'+(((e.clientY-r.top)/r.height-.5)*4-1).toFixed(1)+'px)';
+      });
+      b.addEventListener('pointerleave',function(){ b.style.transform=''; });
+    });
+  }
+
+  /* waypoints */
+  var ways=[['top','Top'],['idea','The idea'],['journey','Walkthrough'],['demo','Try it'],['compare','Why us'],['pricing','Pricing'],['faq','FAQ']];
+  var wp=document.getElementById('waypoints');
+  if(wp){
+    ways.forEach(function(w){
+      var el=document.getElementById(w[0]); if(!el) return;
+      var b=document.createElement('button'); b.className='wp'; b.setAttribute('data-label',w[1]); b.setAttribute('aria-label',w[1]);
+      b.addEventListener('click',function(){ el.scrollIntoView({behavior: rm?'auto':'smooth'}); });
+      b._target=el; wp.appendChild(b);
+    });
+    var dots=[].slice.call(wp.children);
+    function mark(){
+      var y=window.scrollY+window.innerHeight*.42, best=0;
+      dots.forEach(function(d,i){ if(d._target.offsetTop<=y) best=i; });
+      dots.forEach(function(d,i){ d.classList.toggle('on', i===best); });
+    }
+    window.addEventListener('scroll',mark,{passive:true}); mark();
+  }
+
+  /* ============ interactive demo ============ */
+  var body=document.getElementById('demoBody'), act=document.getElementById('demoAct'),
+      resetB=document.getElementById('demoReset'), live=document.getElementById('demoLive'),
+      stateEl=document.getElementById('demoState'), core=document.getElementById('demoCore'),
+      coreState=document.getElementById('demoCoreState'), packet=document.getElementById('demoPacket'),
+      shell=document.querySelector('.demo-shell');
+  if(!body) return;
+  var tabs=[].slice.call(document.querySelectorAll('.demo-tab'));
+  var plat='claude', savedState=false, resumed={grok:false,codex:false}, busy=false;
+  function base(){
+    return {
+      claude:[['u','<b>you</b>  should we use JWT or sessions for auth?'],
+              ['a','JWT. Stateless, low ops. Redis sessions add a lock race.'],
+              ['chips','']],
+      grok:[['dim','new chat. no context yet.']],
+      codex:[['dim','new session. no context yet.']]
+    };
+  }
+  var convo=base();
+  function line(cls,html){
+    if(cls==='chips') return '<div class="demo-chips"><span class="rnode dec">decision: JWT</span><span class="rnode rej">rejected: Redis</span><span class="rnode op">open: refresh</span></div>';
+    return '<div class="dl '+cls+'">'+html+'</div>';
+  }
+  function render(){
+    body.innerHTML=convo[plat].map(function(l){return line(l[0],l[1]);}).join('');
+    tabs.forEach(function(t){ t.classList.toggle('active', t.getAttribute('data-plat')===plat);
+      t.setAttribute('aria-selected', t.getAttribute('data-plat')===plat ? 'true':'false'); });
+    updateAct();
+  }
+  function updateAct(){
+    act.disabled=busy;
+    if(plat==='claude'){ act.textContent = savedState ? 'Open grok' : 'Save to Continuum'; }
+    else if(!savedState){ act.textContent='Save in claude first'; }
+    else if(!resumed[plat]){ act.textContent='Resume project auth'; }
+    else { var other=plat==='grok'?'codex':'grok';
+      act.textContent = resumed[other] ? 'Loop complete, replay it' : ('Open '+other); }
+    resetB.hidden = !(resumed.grok||resumed.codex);
+  }
+  function switchTo(pl){ plat=pl; render(); }
+  tabs.forEach(function(t){ t.addEventListener('click',function(){ if(!busy){ t.classList.remove('hint'); switchTo(t.getAttribute('data-plat')); } }); });
+  function flyPacket(){
+    if(rm||!packet||!shell) return;
+    var br=body.getBoundingClientRect(), cr=core.getBoundingClientRect(), sr=shell.getBoundingClientRect();
+    packet.hidden=false; packet.style.opacity='1'; packet.style.transition='none';
+    packet.style.left=(br.left-sr.left+br.width*.55)+'px'; packet.style.top=(br.top-sr.top+br.height*.4)+'px';
+    packet.style.transform='translate(0,0)';
+    void packet.offsetWidth;
+    packet.style.transition='';
+    var dx=(cr.left-sr.left+cr.width/2)-(br.left-sr.left+br.width*.55);
+    var dy=(cr.top-sr.top+cr.height/2)-(br.top-sr.top+br.height*.4);
+    packet.style.transform='translate('+dx+'px,'+dy+'px)'; packet.style.opacity='0';
+    setTimeout(function(){ packet.hidden=true; },900);
+  }
+  function doSave(){
+    busy=true; updateAct();
+    flyPacket();
+    setTimeout(function(){
+      savedState=true;
+      convo.claude.push(['ok','saved  id cp-8f2a  3 decisions  topics jwt, auth']);
+      core.classList.add('lit'); coreState.textContent='cp-8f2a';
+      live.classList.add('saved'); stateEl.textContent='saved cp-8f2a';
+      tabs.forEach(function(t){ if(t.getAttribute('data-plat')!=='claude') t.classList.add('hint'); });
+      busy=false; render();
+    }, rm?60:820);
+  }
+  function typeLines(lines,done){
+    busy=true; updateAct();
+    if(rm){ lines.forEach(function(l){ convo[plat].push(l); }); busy=false; render(); if(done)done(); return; }
+    var i=0;
+    (function next(){
+      if(i>=lines.length){ busy=false; render(); if(done)done(); return; }
+      var l=lines[i], full=l[1], shown=0;
+      convo[plat].push([l[0],'']);
+      (function tick(){
+        shown+=2;
+        convo[plat][convo[plat].length-1][1]=full.slice(0,shown);
+        body.innerHTML=convo[plat].map(function(x){return line(x[0],x[1]);}).join('');
+        body.scrollTop=body.scrollHeight;
+        if(shown<full.length) setTimeout(tick,17); else { i++; setTimeout(next,220); }
+      })();
+    })();
+  }
+  function doResume(){
+    typeLines([
+      ['res','RESUME project auth'],
+      ['a','decided JWT, stateless'],
+      ['a','rejected Redis, lock race'],
+      ['brass','open: refresh endpoint'],
+      ['ok','continuing exactly where you left off.']
+    ],function(){ resumed[plat]=true; updateAct(); });
+  }
+  act.addEventListener('click',function(){
+    if(busy) return;
+    if(plat==='claude'){ savedState ? switchTo('grok') : doSave(); return; }
+    if(!savedState){ switchTo('claude'); return; }
+    if(!resumed[plat]){ doResume(); return; }
+    var other=plat==='grok'?'codex':'grok';
+    if(!resumed[other]){ switchTo(other); } else { resetDemo(); }
+  });
+  function resetDemo(){
+    convo=base(); savedState=false; resumed={grok:false,codex:false}; busy=false; plat='claude';
+    core.classList.remove('lit'); coreState.textContent='empty';
+    live.classList.remove('saved'); stateEl.textContent='nothing saved';
+    tabs.forEach(function(t){ t.classList.remove('hint'); });
+    render();
+  }
+  resetB.addEventListener('click',resetDemo);
+  render();
 })();
 </script>
 </body>
